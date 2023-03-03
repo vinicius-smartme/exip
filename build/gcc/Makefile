@@ -58,8 +58,18 @@ UTILS_BIN_DIR = $(BIN_DIR)/utils
 # Public include directory
 PUBLIC_INCLUDE_DIR = $(PROJECT_ROOT)/include
 
+# Library output name
+ifeq ($(OS), Windows_NT)
+	STATIC_LIB_EXIP_NAME = libexip.lib
+	DYN_LIB_EXIP_NAME = libexip.dll
+else
+	STATIC_LIB_EXIP_NAME = libexip.a
+	DYN_LIB_EXIP_NAME = libexip.so
+endif
+
 # All directories containing *.c files
-VPATH = $(PROJECT_ROOT)/src/common/src
+VPATH = $(PROJECT_ROOT)/src/codec/src
+VPATH += $(PROJECT_ROOT)/src/common/src
 VPATH += $(PROJECT_ROOT)/src/contentIO/src
 VPATH += $(PROJECT_ROOT)/src/grammar/src
 VPATH += $(PROJECT_ROOT)/src/grammarGen/src
@@ -71,6 +81,9 @@ VPATH += $(PROJECT_ROOT)/utils/schemaHandling
 VPATH += $(PROJECT_ROOT)/utils/schemaHandling/output
 VPATH += $(PROJECT_ROOT)/tests
 VPATH += $(TARGET)
+
+# Source files for the codec module
+CODEC_SRC = $(notdir $(wildcard $(PROJECT_ROOT)/src/codec/src/*.c))
 
 # Source files for the common module
 COMMON_SRC = $(notdir $(wildcard $(PROJECT_ROOT)/src/common/src/*.c))
@@ -102,7 +115,7 @@ EXIPG_UTIL_SRC += $(notdir $(wildcard $(PROJECT_ROOT)/utils/schemaHandling/outpu
 EXIPE_EXAMPLE_SRC = $(notdir $(wildcard $(PROJECT_ROOT)/examples/simpleEncoding/*.c))
 EXIPD_EXAMPLE_SRC = $(notdir $(wildcard $(PROJECT_ROOT)/examples/simpleDecoding/*.c))
 
-LIB_SOURCES = $(COMMON_SRC) $(CONTENT_IO_SRC) $(GRAMMAR_SRC) $(STREAM_IO_SRC) $(STRING_TABLES_SRC) $(notdir $(wildcard $(TARGET)/*.c))
+LIB_SOURCES = $(CODEC_SRC) $(COMMON_SRC) $(CONTENT_IO_SRC) $(GRAMMAR_SRC) $(STREAM_IO_SRC) $(STRING_TABLES_SRC) $(notdir $(wildcard $(TARGET)/*.c))
 
 ifeq ($(INCLUDE_GRAMMAR_GENERATION), true)
   LIB_SOURCES += $(GRAMMAR_GEN_SRC)
@@ -118,10 +131,11 @@ EXIPD_OBJECTS=$(EXIPD_EXAMPLE_SRC:%.c=$(BIN_DIR)/%.o)
 EXIPG_OBJECTS=$(EXIPG_UTIL_SRC:%.c=$(BIN_DIR)/%.o)
 LIB_OBJECTS=$(LIB_SOURCES:%.c=$(BIN_DIR)/%.o)
 
-SOURCES_ALL = $(COMMON_SRC) $(CONTENT_IO_SRC) $(GRAMMAR_SRC) $(STREAM_IO_SRC) $(STRING_TABLES_SRC)\
+SOURCES_ALL = $(CODEC_SRC) $(COMMON_SRC) $(CONTENT_IO_SRC) $(GRAMMAR_SRC) $(STREAM_IO_SRC) $(STRING_TABLES_SRC)\
 	$(GRAMMAR_GEN_SRC) $(notdir $(wildcard $(TARGET)/*.c)) $(TESTS_SRC) $(EXIPG_UTIL_SRC) $(EXIPE_EXAMPLE_SRC) $(EXIPD_EXAMPLE_SRC)
 
 # Compiler include flags
+INCDIRS += -I$(PROJECT_ROOT)/src/codec/include
 INCDIRS += -I$(PROJECT_ROOT)/src/common/include
 INCDIRS += -I$(PROJECT_ROOT)/src/contentIO/include
 INCDIRS += -I$(PROJECT_ROOT)/src/grammar/include
@@ -150,11 +164,11 @@ UTILS_BINS := $(UTILS_BIN_DIR)/exipg
 COMPILE = $(CC) $(CFLAGS) $(INCDIRS)
 
 # TARGET: (DEFAULT) Building the exip library
-all: $(BIN_DIR) $(LIB_BIN_DIR) $(LIB_OBJECTS) $(LIB_BIN_DIR)/libexip.a copy_headers
+all: $(BIN_DIR) $(LIB_BIN_DIR) $(LIB_OBJECTS) $(LIB_BIN_DIR)/$(STATIC_LIB_EXIP_NAME) copy_headers
 
 # TARGET: Building exip as dynamic library
 dynlib: COMPILE += -fPIC
-dynlib: clean all $(LIB_BIN_DIR)/libexip.so
+dynlib: clean all $(LIB_BIN_DIR)/$(DYN_LIB_EXIP_NAME)
 
 # TARGET: Exacute the unit tests
 check: all $(TESTS_BIN_DIR) $(CHECK_BINS)
@@ -212,12 +226,12 @@ $(EXAMPLES_BIN_DIR)/exipd: $(EXIPD_OBJECTS)
 $(UTILS_BIN_DIR)/exipg: $(EXIPG_OBJECTS)
 		$(COMPILE) $(LDFLAGS) $^ -lexip -o $@
 	
-$(LIB_BIN_DIR)/libexip.a: $(LIB_OBJECTS)
-		$(ARCHIVER) rcs $(LIB_BIN_DIR)/libexip.a $(LIB_OBJECTS)
+$(LIB_BIN_DIR)/$(STATIC_LIB_EXIP_NAME): $(LIB_OBJECTS)
+		$(ARCHIVER) rcs $(LIB_BIN_DIR)/$(STATIC_LIB_EXIP_NAME) $(LIB_OBJECTS)
 
-$(LIB_BIN_DIR)/libexip.so: $(LIB_OBJECTS)
-		$(CC) -shared -Wl,-soname,libexip.so.$(EXIP_VERSION) -o $(LIB_BIN_DIR)/libexip.so.$(EXIP_VERSION) $(LIB_OBJECTS)
-		ln -sf $(LIB_BIN_DIR)/libexip.so.$(EXIP_VERSION) $(LIB_BIN_DIR)/libexip.so
+$(LIB_BIN_DIR)/$(DYN_LIB_EXIP_NAME): $(LIB_OBJECTS)
+		$(CC) -shared -Wl,-soname,$(DYN_LIB_EXIP_NAME).$(EXIP_VERSION) -o $(LIB_BIN_DIR)/$(DYN_LIB_EXIP_NAME).$(EXIP_VERSION) $(LIB_OBJECTS)
+		ln -sf $(LIB_BIN_DIR)/$(DYN_LIB_EXIP_NAME).$(EXIP_VERSION) $(LIB_BIN_DIR)/$(DYN_LIB_EXIP_NAME)
 
 $(BIN_DIR):
 		mkdir -p $(BIN_DIR)

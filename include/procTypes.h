@@ -321,6 +321,8 @@ struct StringType
 
 typedef struct StringType String;
 
+#define EMPTY_STRING {.str = NULL, .length = 0}
+
 /**
  * Represent a fully qualified name
  */
