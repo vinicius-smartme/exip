@@ -15,7 +15,7 @@
  * @par[Revision] $Id$
  */
 
-#include "decodeTestEXI.h"
+#include "decodeBufferTestEXI.h"
 #include "grammarGenerator.h"
 
 #define MAX_XSD_FILES_COUNT 10 // up to 10 XSD files
@@ -25,6 +25,8 @@ static void parseSchema(char* xsdList, EXIPSchema* schema);
 static void parseOpsMask(char* mask, EXIOptions* ops);
 
 size_t readFileInputStream(void* buf, size_t readSize, void* stream);
+
+#define IN_DATA_SIZE 1024
 
 int main(int argc, char *argv[])
 {
@@ -38,6 +40,8 @@ int main(int argc, char *argv[])
 	unsigned char outFlag = OUT_EXI; // Default output option
 	unsigned int argIndex = 1;
 	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
+	char buf[IN_DATA_SIZE];
+	size_t inFileSize;
 
 	strcpy(sourceFileName, "stdin");
 	makeDefaultOpts(&ops);
@@ -111,7 +115,17 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	tmp_err_code = decode(schemaPtr, outFlag, infile, outOfBandOpts, opsPtr, readFileInputStream);
+    inFileSize = fread(buf, 1, IN_DATA_SIZE, infile);
+    if(fread <= 0)
+    {
+        fprintf(stderr, "\nUnable to read file %s\n", sourceFileName);
+        exit(1);
+    } else if (inFileSize == IN_DATA_SIZE) {
+		printf("Warning: Maybe file size is bigger than the buffer !!\n");
+	}
+	printf("Read %d(Buffer size: %d)\n", inFileSize, IN_DATA_SIZE);
+
+	tmp_err_code = decode(schemaPtr, outFlag, NULL, buf, inFileSize, outOfBandOpts, opsPtr, NULL);
 
 	if(schemaPtr != NULL)
 		destroySchema(schemaPtr);

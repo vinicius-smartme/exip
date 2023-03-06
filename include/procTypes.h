@@ -321,7 +321,7 @@ struct StringType
 
 typedef struct StringType String;
 
-#define EMPTY_STRING {.str = NULL, .length = 0}
+#define EMPTY_STRING (String){.str = NULL, .length = 0}
 
 /**
  * Represent a fully qualified name
@@ -1262,6 +1262,36 @@ struct EXIheader
 
 typedef struct EXIheader EXIheader;
 
+/**
+ * A structure used as an alternative to the IoStream.
+ */
+struct BufferStream
+{
+	/**
+	 * Read/write buffer
+	 */
+	char* buf;
+
+	/**
+	 * The size of the buffer
+	 */
+	Index bufLen;
+
+	/**
+	 * The size of the data stored in the buffer - number of bytes.
+	 */
+	Index bufContent;
+	
+	/**
+	 * The current buf pointer indicates the first byte of the next data to be read/written
+	 */
+	Index bufPtr;
+};
+
+typedef struct BufferStream BufferStream;
+
+#define EMPTY_BUFFER_STREAM (BufferStream){.buf = NULL, .bufLen = 0, .bufContent = 0, .bufPtr = 0}
+
 struct BinaryBuffer
 {
 	/**
@@ -1286,6 +1316,11 @@ struct BinaryBuffer
 	 * Input/Output Stream used to fill/flush the buffer during processing
 	 */
 	IOStream ioStrm;
+
+	/**
+	 * Used to inject data directly to a buffer instead of read/write operations.
+	 */
+	BufferStream bufStrm;
 };
 
 typedef struct BinaryBuffer BinaryBuffer;

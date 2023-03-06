@@ -1006,10 +1006,10 @@ errorCode closeEXIStream(EXIStream* strm)
 	}
 
 	// Flush the buffer first if there is an output Stream
-	if(strm->buffer.ioStrm.readWriteToStream != NULL)
-	{
-		if((Index)strm->buffer.ioStrm.readWriteToStream(strm->buffer.buf, strm->context.bufferIndx + 1, strm->buffer.ioStrm.stream) < strm->context.bufferIndx + 1)
-			tmp_err_code = EXIP_BUFFER_END_REACHED;
+	Index numBytesWritten = 0;
+	errorCode error = doReadWriteToStream(&(strm->buffer), 0, strm->context.bufferIndx + 1, FALSE, &numBytesWritten);
+	if(numBytesWritten < strm->context.bufferIndx + 1) {
+		tmp_err_code = EXIP_BUFFER_END_REACHED;
 	}
 
 	freeAllMem(strm);

@@ -47,6 +47,7 @@ START_TEST (test_readNextBit)
   testStream.buffer.ioStrm.readWriteToStream = NULL;
   testStream.buffer.ioStrm.stream = NULL;
   testStream.context.bufferIndx = 0;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
   initAllocList(&testStream.memList);
 
   err = readNextBit(&testStream, &bit_val);
@@ -102,6 +103,7 @@ START_TEST (test_readBits)
   testStream.buffer.ioStrm.readWriteToStream = NULL;
   testStream.buffer.ioStrm.stream = NULL;
   testStream.context.bufferIndx = 0;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
   initAllocList(&testStream.memList);
 
   err = readBits(&testStream, 4, &bits_val);
@@ -150,6 +152,7 @@ START_TEST (test_writeNextBit)
   testStream.buffer.ioStrm.readWriteToStream = NULL;
   testStream.buffer.ioStrm.stream = NULL;
   testStream.context.bufferIndx = 0;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
   initAllocList(&testStream.memList);
 
   err = writeNextBit(&testStream, 1);
@@ -202,6 +205,7 @@ START_TEST (test_writeNBits)
   testStream.buffer.ioStrm.stream = NULL;
   testStream.buffer.bufContent = 2;
   testStream.context.bufferIndx = 0;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
   initAllocList(&testStream.memList);
 
   err = writeNBits(&testStream, 7, 19);
@@ -259,6 +263,7 @@ START_TEST (test_decodeNBitUnsignedInteger)
   testStream.buffer.ioStrm.readWriteToStream = NULL;
   testStream.buffer.ioStrm.stream = NULL;
   testStream.context.bufferIndx = 0;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
   initAllocList(&testStream.memList);
 
   err = decodeNBitUnsignedInteger(&testStream, 6, &bit_val);
@@ -291,6 +296,7 @@ START_TEST (test_decodeBoolean)
   testStream.buffer.ioStrm.readWriteToStream = NULL;
   testStream.buffer.ioStrm.stream = NULL;
   testStream.context.bufferIndx = 0;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
   initAllocList(&testStream.memList);
 
   err = decodeBoolean(&testStream, &bit_val);
@@ -323,6 +329,7 @@ START_TEST (test_decodeUnsignedInteger)
   testStream.buffer.ioStrm.readWriteToStream = NULL;
   testStream.buffer.ioStrm.stream = NULL;
   testStream.context.bufferIndx = 0;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
   initAllocList(&testStream.memList);
 
   err = decodeUnsignedInteger(&testStream, &bit_val);
@@ -360,6 +367,7 @@ START_TEST (test_decodeString)
   testStream.buffer.bufContent = 4;
   testStream.buffer.ioStrm.readWriteToStream = NULL;
   testStream.buffer.ioStrm.stream = NULL;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
   testStream.context.bufferIndx = 0;
   initAllocList(&testStream.memList);
   bit_val.length = 0;
@@ -416,6 +424,7 @@ START_TEST (test_decodeBinary)
   testStream.buffer.bufContent = 20;
   testStream.buffer.ioStrm.readWriteToStream = NULL;
   testStream.buffer.ioStrm.stream = NULL;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
   initAllocList(&testStream.memList);
   for(i=0;i<20;i++) testbuf[i]=buf[i];
 
@@ -495,6 +504,7 @@ START_TEST (test_decodeFloat)
 	testStream.buffer.bufContent = 3;
 	testStream.buffer.ioStrm.readWriteToStream = NULL;
 	testStream.buffer.ioStrm.stream = NULL;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
 	testStream.context.bufferIndx = 0;
 	testStream.context.bitPointer = 0;
 	initAllocList(&testStream.memList);
@@ -545,6 +555,7 @@ START_TEST (test_decodeIntegerValue)
   testStream.buffer.bufContent = 3;
   testStream.buffer.ioStrm.readWriteToStream = NULL;
   testStream.buffer.ioStrm.stream = NULL;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
   testStream.context.bufferIndx = 0;
   initAllocList(&testStream.memList);
 
@@ -601,6 +612,7 @@ START_TEST (test_decodeDecimalValue)
 	testStream.buffer.bufContent = 3;
 	testStream.buffer.ioStrm.readWriteToStream = NULL;
 	testStream.buffer.ioStrm.stream = NULL;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
 	testStream.context.bufferIndx = 0;
 	testStream.context.bitPointer = 0;
 	initAllocList(&testStream.memList);
@@ -639,6 +651,7 @@ START_TEST (test_encodeNBitUnsignedInteger)
   testStream.buffer.bufContent = 2;
   testStream.buffer.ioStrm.readWriteToStream = NULL;
   testStream.buffer.ioStrm.stream = NULL;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
   testStream.context.bufferIndx = 0;
   initAllocList(&testStream.memList);
 
@@ -674,6 +687,7 @@ START_TEST (test_encodeBoolean)
   testStream.buffer.bufContent = 2;
   testStream.buffer.ioStrm.readWriteToStream = NULL;
   testStream.buffer.ioStrm.stream = NULL;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
   testStream.context.bufferIndx = 0;
   initAllocList(&testStream.memList);
 
@@ -719,6 +733,7 @@ START_TEST (test_encodeUnsignedInteger)
   testStream.buffer.bufContent = 3;
   testStream.buffer.ioStrm.readWriteToStream = NULL;
   testStream.buffer.ioStrm.stream = NULL;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
   testStream.context.bufferIndx = 0;
   initAllocList(&testStream.memList);
 
@@ -782,6 +797,7 @@ START_TEST (test_encodeString)
   testStream.buffer.bufContent = 50;
   testStream.buffer.ioStrm.readWriteToStream = NULL;
   testStream.buffer.ioStrm.stream = NULL;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
   testStream.context.bufferIndx = 0;
   asciiToString("TEST encodeString()", &testStr, &testStream.memList, FALSE);
 
@@ -823,6 +839,7 @@ START_TEST (test_encodeBinary)
 	testStream.buffer.bufContent = 50;
 	testStream.buffer.ioStrm.readWriteToStream = NULL;
 	testStream.buffer.ioStrm.stream = NULL;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
 	testStream.context.bufferIndx = 0;
 	testStream.context.bitPointer = 0;
 
@@ -863,6 +880,7 @@ START_TEST (test_encodeFloatValue)
 	testStream.buffer.bufContent = 10;
 	testStream.buffer.ioStrm.readWriteToStream = NULL;
 	testStream.buffer.ioStrm.stream = NULL;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
 	testStream.context.bufferIndx = 0;
 	testStream.context.bitPointer = 0;
 	initAllocList(&testStream.memList);
@@ -904,6 +922,7 @@ START_TEST (test_encodeIntegerValue)
 	testStream.buffer.bufContent = 5;
 	testStream.buffer.ioStrm.readWriteToStream = NULL;
 	testStream.buffer.ioStrm.stream = NULL;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
 	testStream.context.bufferIndx = 0;
 	testStream.context.bitPointer = 0;
 	initAllocList(&testStream.memList);
@@ -948,6 +967,7 @@ START_TEST (test_encodeDecimalValue)
 	testStream.buffer.bufContent = 30;
 	testStream.buffer.ioStrm.readWriteToStream = NULL;
 	testStream.buffer.ioStrm.stream = NULL;
+  testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
 	testStream.context.bufferIndx = 0;
 	testStream.context.bitPointer = 0;
 	initAllocList(&testStream.memList);

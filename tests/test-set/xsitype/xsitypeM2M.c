@@ -85,7 +85,8 @@ int main(int ac, char **av) {
 	buffer.bufLen = OUTPUT_BUFFER_SIZE;
 	buffer.ioStrm.readWriteToStream = NULL;
 	buffer.ioStrm.stream = NULL;
-
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
+	
 	char files[256] = "";
 	if	(ac == 2 && !strcmp(av[1], "-s")) {
 		strcpy (files, "common.exs,subscription.exs,contentInstances.exs,contentInstance.exs,mime.exs");
@@ -393,6 +394,7 @@ printf ("%d %s\n", i, token);
 			buffer[i].bufContent = buffer[i].bufLen;
 			buffer[i].ioStrm.readWriteToStream = NULL;
 			buffer[i].ioStrm.stream = NULL;
+			buffer[i].bufStrm = EMPTY_BUFFER_STREAM;
 		}
 	}
 

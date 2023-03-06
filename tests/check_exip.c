@@ -55,6 +55,7 @@ START_TEST (test_default_options)
 	buffer.bufLen = OUTPUT_BUFFER_SIZE;
 	buffer.ioStrm.readWriteToStream = NULL;
 	buffer.ioStrm.stream = NULL;
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
 	// Serialization steps:
 
@@ -164,6 +165,7 @@ START_TEST (test_fragment_option)
 	buffer.bufLen = OUTPUT_BUFFER_SIZE;
 	buffer.ioStrm.readWriteToStream = NULL;
 	buffer.ioStrm.stream = NULL;
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
 	// Serialization steps:
 
@@ -309,6 +311,7 @@ START_TEST (test_value_part_zero)
 	buffer.buf = buf;
 	buffer.bufLen = OUTPUT_BUFFER_SIZE;
 	buffer.bufContent = 0;
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
 	// Serialization steps:
 
@@ -499,6 +502,7 @@ START_TEST (test_recursive_defs)
 	buffer.buf = buf;
 	buffer.bufLen = OUTPUT_BUFFER_SIZE;
 	buffer.bufContent = 0;
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
 	// Serialization steps:
 
@@ -724,6 +728,7 @@ START_TEST (test_built_in_dynamic_types)
 	buffer.bufContent = strmSize;
 	buffer.buf = buf;
 	buffer.bufLen = OUTPUT_BUFFER_SIZE;
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
 	// Parsing steps:
 
@@ -785,6 +790,7 @@ errorCode encodeWithDynamicTypes(char* buf, int buf_size, int *strmSize)
 	buffer.buf = buf;
 	buffer.bufLen = OUTPUT_BUFFER_SIZE;
 	buffer.bufContent = 0;
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
 	// Serialization steps:
 
@@ -917,6 +923,7 @@ START_TEST (test_large_doc_str_pattern)
 	buffer.buf = buf;
 	buffer.bufLen = OUTPUT_BUFFER_SIZE_LARGE_DOC;
 	buffer.bufContent = 0;
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
 	parseSchema(schemafname, 1, &schema);
 
@@ -1181,6 +1188,7 @@ START_TEST (test_large_doc_str_pattern)
     	buffer.bufContent = 0;
     	buffer.bufLen = OUTPUT_BUFFER_SIZE_LARGE_DOC;
     	unsigned int eventCount;
+		buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
     	// Parsing steps:
 
@@ -1242,7 +1250,8 @@ START_TEST (test_substitution_groups)
 	buffer.buf = buf;
 	buffer.bufContent = 0;
 	buffer.bufLen = INPUT_BUFFER_SIZE;
-
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
+	
 	// Parsing steps:
 
 	// I.A: First, read in the schema
@@ -1348,6 +1357,7 @@ static void parseSchema(char** xsdList, int count, EXIPSchema* schema)
 			buffer[i].bufContent = buffer[i].bufLen;
 			buffer[i].ioStrm.readWriteToStream = NULL;
 			buffer[i].ioStrm.stream = NULL;
+			buffer[i].bufStrm = EMPTY_BUFFER_STREAM;
 		}
 	}
 

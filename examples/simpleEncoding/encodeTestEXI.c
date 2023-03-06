@@ -70,6 +70,7 @@ errorCode encode(EXIPSchema* schemaPtr, FILE *outfile, size_t (*outputStream)(vo
 	buffer.buf = buf;
 	buffer.bufLen = OUTPUT_BUFFER_SIZE;
 	buffer.bufContent = 0;
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
 	// Serialization steps:
 

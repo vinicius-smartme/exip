@@ -6,15 +6,19 @@
 \===================================================================*/
 
 /**
- * @file decode.c
- * @brief An EXI decoder
+ * @file decodeTestEXI.c
+ * @brief Testing the EXI decoder
+ *
+ * @date Oct 13, 2010
+ * @author Rumen Kyusakov
+ * @version 0.5
+ * @par[Revision] $Id$
  */
-#include "decode.h"
-#include "codec_common.h"
 #include "EXIParser.h"
 #include "stringManipulate.h"
 #include <stdio.h>
 #include <string.h>
+#include "decodeBufferTestEXI.h"
 
 #define INPUT_BUFFER_SIZE 200
 #define MAX_PREFIXES 10
@@ -23,52 +27,52 @@ struct appData
 {
 	unsigned char outputFormat;
 	unsigned char expectAttributeData;
-	char nameBuf[200];				  // needed for the OUT_XML Output Format
-	struct element *stack;			  // needed for the OUT_XML Output Format
-	unsigned char unclosedElement;	  // needed for the OUT_XML Output Format
+	char nameBuf[200];             // needed for the OUT_XML Output Format
+	struct element* stack;         // needed for the OUT_XML Output Format
+	unsigned char unclosedElement; 	 // needed for the OUT_XML Output Format
 	char prefixes[MAX_PREFIXES][200]; // needed for the OUT_XML Output Format
-	unsigned char prefixesCount;	  // needed for the OUT_XML Output Format
+	unsigned char prefixesCount; 	 // needed for the OUT_XML Output Format
 };
+
 
 // Stuff needed for the OUT_XML Output Format
 // ******************************************
-struct element
-{
-	struct element *next;
-	char *name;
+struct element {
+	struct element* next;
+	char* name;
 };
 
-static void push(struct element **stack, struct element *el);
-static struct element *pop(struct element **stack);
-static struct element *createElement(char *name);
-static void destroyElement(struct element *el);
+static void push(struct element** stack, struct element* el);
+static struct element* pop(struct element** stack);
+static struct element* createElement(char* name);
+static void destroyElement(struct element* el);
 
 // returns != 0 if error
-static char lookupPrefix(struct appData *aData, String ns, unsigned char *prxHit, unsigned char *prefixIndex);
+static char lookupPrefix(struct appData* aData, String ns, unsigned char* prxHit, unsigned char* prefixIndex);
 
 // ******************************************
 
 // Content Handler API
-static errorCode sample_fatalError(const errorCode code, const char *msg, void *app_data);
-static errorCode sample_startDocument(void *app_data);
-static errorCode sample_endDocument(void *app_data);
-static errorCode sample_startElement(QName qname, void *app_data);
-static errorCode sample_endElement(void *app_data);
-static errorCode sample_attribute(QName qname, void *app_data);
-static errorCode sample_stringData(const String value, void *app_data);
-static errorCode sample_decimalData(Decimal value, void *app_data);
-static errorCode sample_intData(Integer int_val, void *app_data);
-static errorCode sample_floatData(Float fl_val, void *app_data);
-static errorCode sample_booleanData(boolean bool_val, void *app_data);
-static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data);
-static errorCode sample_binaryData(const char *binary_val, Index nbytes, void *app_data);
-static errorCode sample_qnameData(const QName qname, void *app_data);
+static errorCode sample_fatalError(const errorCode code, const char* msg, void* app_data);
+static errorCode sample_startDocument(void* app_data);
+static errorCode sample_endDocument(void* app_data);
+static errorCode sample_startElement(QName qname, void* app_data);
+static errorCode sample_endElement(void* app_data);
+static errorCode sample_attribute(QName qname, void* app_data);
+static errorCode sample_stringData(const String value, void* app_data);
+static errorCode sample_decimalData(Decimal value, void* app_data);
+static errorCode sample_intData(Integer int_val, void* app_data);
+static errorCode sample_floatData(Float fl_val, void* app_data);
+static errorCode sample_booleanData(boolean bool_val, void* app_data);
+static errorCode sample_dateTimeData(EXIPDateTime dt_val, void* app_data);
+static errorCode sample_binaryData(const char* binary_val, Index nbytes, void* app_data);
+static errorCode sample_qnameData(const QName qname, void* app_data);
 
-static errorCode decode(
+errorCode decode(
 	EXIPSchema *schemaPtr, 
 	unsigned char outFlag, 
-	void *in_stream, 
-	void *in_data, 
+	void *infile, 
+	void *indata, 
 	size_t inDataLen, 
 	boolean outOfBandOpts, 
 	EXIOptions *opts, 
@@ -87,17 +91,18 @@ static errorCode decode(
 	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 	// Parsing steps:
 
-	// I: First, define an external stream for the input to the parser if any, otherwise tries as external buffer
+	// I: First, define an external stream for the input to the parser if any, otherwise set to NULL
 	buffer.ioStrm.readWriteToStream = inputStream;
-	buffer.ioStrm.stream = in_stream;
-	if (inputStream == NULL && in_data != NULL && inDataLen > 0)
+	buffer.ioStrm.stream = infile;
+	if (inputStream == NULL && indata != NULL && inDataLen > 0)
 	{
-		buffer.bufStrm.buf = in_data;
+		buffer.bufStrm.buf = indata;
 		buffer.bufStrm.bufContent = inDataLen;
 		buffer.bufStrm.bufLen = inDataLen;
 	}
 
 	// II: Second, initialize the parser object
+	printf("Initializing the parser...\n");
 	TRY(parse.initParser(&testParser, buffer, &parsingData));
 
 	// III: Initialize the parsing data and hook the callback handlers to the parser object.
@@ -107,7 +112,7 @@ static errorCode decode(
 	parsingData.unclosedElement = 0;
 	parsingData.prefixesCount = 0;
 	parsingData.outputFormat = outFlag;
-	if (outOfBandOpts && opts != NULL)
+	if(outOfBandOpts && opts != NULL)
 		testParser.strm.header.opts = *opts;
 
 	testParser.handler.fatalError = sample_fatalError;
@@ -127,7 +132,7 @@ static errorCode decode(
 	testParser.handler.qnameData = sample_qnameData;
 
 	// IV: Parse the header of the stream
-
+	printf("Parsing the header...\n");
 	TRY(parse.parseHeader(&testParser, outOfBandOpts));
 
 	// IV.1: Set the schema to be used for parsing.
@@ -135,12 +140,12 @@ static errorCode decode(
 	// parser.strm.header.opts.schemaIDMode and
 	// parser.strm.header.opts.schemaID respectively
 	// If schemaless mode, use setSchema(&parser, NULL);
-
+	printf("Parsing the schema...\n");
 	TRY(parse.setSchema(&testParser, schemaPtr));
 
 	// V: Parse the body of the EXI stream
 
-	while (tmp_err_code == EXIP_OK)
+	while(tmp_err_code == EXIP_OK)
 	{
 		tmp_err_code = parse.parseNext(&testParser);
 	}
@@ -149,54 +154,44 @@ static errorCode decode(
 
 	parse.destroyParser(&testParser);
 
-	if (tmp_err_code == EXIP_PARSING_COMPLETE)
+	if(tmp_err_code == EXIP_PARSING_COMPLETE)
 		return EXIP_OK;
 	else
 		return tmp_err_code;
 }
 
-errorCode decode_from_file(EXIPSchema *schemaPtr, unsigned char outFlag, void *in_stream, boolean outOfBandOpts, EXIOptions *opts)
-{
-	return decode(schemaPtr, outFlag, in_stream, NULL, 0, outOfBandOpts, opts, readFileInputStream);
-}
-
-errorCode decode_from_buffer(EXIPSchema *schemaPtr, unsigned char outFlag, void *in_data, size_t inDataLen, boolean outOfBandOpts, EXIOptions *opts)
-{
-	return decode(schemaPtr, outFlag, NULL, in_data, inDataLen, outOfBandOpts, opts, (EXIOptions *)NULL);
-}
-
-static errorCode sample_fatalError(const errorCode code, const char *msg, void *app_data)
+static errorCode sample_fatalError(const errorCode code, const char* msg, void* app_data)
 {
 	printf("\n%d : FATAL ERROR: %s\n", code, msg);
 	return EXIP_HANDLER_STOP;
 }
 
-static errorCode sample_startDocument(void *app_data)
+static errorCode sample_startDocument(void* app_data)
 {
-	struct appData *appD = (struct appData *)app_data;
-	if (appD->outputFormat == OUT_EXI)
+	struct appData* appD = (struct appData*) app_data;
+	if(appD->outputFormat == OUT_EXI)
 		printf("SD\n");
-	else if (appD->outputFormat == OUT_XML)
+	else if(appD->outputFormat == OUT_XML)
 		printf("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 
 	return EXIP_OK;
 }
 
-static errorCode sample_endDocument(void *app_data)
+static errorCode sample_endDocument(void* app_data)
 {
-	struct appData *appD = (struct appData *)app_data;
-	if (appD->outputFormat == OUT_EXI)
+	struct appData* appD = (struct appData*) app_data;
+	if(appD->outputFormat == OUT_EXI)
 		printf("ED\n");
-	else if (appD->outputFormat == OUT_XML)
+	else if(appD->outputFormat == OUT_XML)
 		printf("\n");
 
 	return EXIP_OK;
 }
 
-static errorCode sample_startElement(QName qname, void *app_data)
+static errorCode sample_startElement(QName qname, void* app_data)
 {
-	struct appData *appD = (struct appData *)app_data;
-	if (appD->outputFormat == OUT_EXI)
+	struct appData* appD = (struct appData*) app_data;
+	if(appD->outputFormat == OUT_EXI)
 	{
 		printf("SE ");
 		printString(qname.uri);
@@ -204,17 +199,17 @@ static errorCode sample_startElement(QName qname, void *app_data)
 		printString(qname.localName);
 		printf("\n");
 	}
-	else if (appD->outputFormat == OUT_XML)
+	else if(appD->outputFormat == OUT_XML)
 	{
 		char error = 0;
 		unsigned char prefixIndex = 0;
 		unsigned char prxHit = 1;
 		int t;
 
-		if (!isStringEmpty(qname.uri))
+		if(!isStringEmpty(qname.uri))
 		{
 			error = lookupPrefix(appD, *qname.uri, &prxHit, &prefixIndex);
-			if (error != 0)
+			if(error != 0)
 				return EXIP_HANDLER_STOP;
 
 			sprintf(appD->nameBuf, "p%d:", prefixIndex);
@@ -228,11 +223,11 @@ static errorCode sample_startElement(QName qname, void *app_data)
 			appD->nameBuf[qname.localName->length] = '\0';
 		}
 		push(&(appD->stack), createElement(appD->nameBuf));
-		if (appD->unclosedElement)
+		if(appD->unclosedElement)
 			printf(">\n");
 		printf("<%s", appD->nameBuf);
 
-		if (prxHit == 0)
+		if(prxHit == 0)
 		{
 			sprintf(appD->nameBuf, " xmlns:p%d=\"", prefixIndex);
 			printf("%s", appD->nameBuf);
@@ -246,16 +241,16 @@ static errorCode sample_startElement(QName qname, void *app_data)
 	return EXIP_OK;
 }
 
-static errorCode sample_endElement(void *app_data)
+static errorCode sample_endElement(void* app_data)
 {
-	struct appData *appD = (struct appData *)app_data;
-	if (appD->outputFormat == OUT_EXI)
+	struct appData* appD = (struct appData*) app_data;
+	if(appD->outputFormat == OUT_EXI)
 		printf("EE\n");
-	else if (appD->outputFormat == OUT_XML)
+	else if(appD->outputFormat == OUT_XML)
 	{
-		struct element *el;
+		struct element* el;
 
-		if (appD->unclosedElement)
+		if(appD->unclosedElement)
 			printf(">\n");
 		appD->unclosedElement = 0;
 		el = pop(&(appD->stack));
@@ -266,10 +261,10 @@ static errorCode sample_endElement(void *app_data)
 	return EXIP_OK;
 }
 
-static errorCode sample_attribute(QName qname, void *app_data)
+static errorCode sample_attribute(QName qname, void* app_data)
 {
-	struct appData *appD = (struct appData *)app_data;
-	if (appD->outputFormat == OUT_EXI)
+	struct appData* appD = (struct appData*) app_data;
+	if(appD->outputFormat == OUT_EXI)
 	{
 		printf("AT ");
 		printString(qname.uri);
@@ -277,10 +272,10 @@ static errorCode sample_attribute(QName qname, void *app_data)
 		printString(qname.localName);
 		printf("=\"");
 	}
-	else if (appD->outputFormat == OUT_XML)
+	else if(appD->outputFormat == OUT_XML)
 	{
 		printf(" ");
-		if (!isStringEmpty(qname.uri))
+		if(!isStringEmpty(qname.uri))
 		{
 			printString(qname.uri);
 			printf(":");
@@ -293,12 +288,12 @@ static errorCode sample_attribute(QName qname, void *app_data)
 	return EXIP_OK;
 }
 
-static errorCode sample_stringData(const String value, void *app_data)
+static errorCode sample_stringData(const String value, void* app_data)
 {
-	struct appData *appD = (struct appData *)app_data;
-	if (appD->outputFormat == OUT_EXI)
+	struct appData* appD = (struct appData*) app_data;
+	if(appD->outputFormat == OUT_EXI)
 	{
-		if (appD->expectAttributeData)
+		if(appD->expectAttributeData)
 		{
 			printString(&value);
 			printf("\"\n");
@@ -311,9 +306,9 @@ static errorCode sample_stringData(const String value, void *app_data)
 			printf("\n");
 		}
 	}
-	else if (appD->outputFormat == OUT_XML)
+	else if(appD->outputFormat == OUT_XML)
 	{
-		if (appD->expectAttributeData)
+		if(appD->expectAttributeData)
 		{
 			printString(&value);
 			printf("\"");
@@ -321,7 +316,7 @@ static errorCode sample_stringData(const String value, void *app_data)
 		}
 		else
 		{
-			if (appD->unclosedElement)
+			if(appD->unclosedElement)
 				printf(">");
 			appD->unclosedElement = 0;
 			printString(&value);
@@ -331,20 +326,20 @@ static errorCode sample_stringData(const String value, void *app_data)
 	return EXIP_OK;
 }
 
-static errorCode sample_decimalData(Decimal value, void *app_data)
+static errorCode sample_decimalData(Decimal value, void* app_data)
 {
 	return sample_floatData(value, app_data);
 }
 
-static errorCode sample_intData(Integer int_val, void *app_data)
+static errorCode sample_intData(Integer int_val, void* app_data)
 {
-	struct appData *appD = (struct appData *)app_data;
+	struct appData* appD = (struct appData*) app_data;
 	char tmp_buf[30];
-	if (appD->outputFormat == OUT_EXI)
+	if(appD->outputFormat == OUT_EXI)
 	{
-		if (appD->expectAttributeData)
+		if(appD->expectAttributeData)
 		{
-			sprintf(tmp_buf, "%lld", (long long int)int_val);
+			sprintf(tmp_buf, "%lld", (long long int) int_val);
 			printf("%s", tmp_buf);
 			printf("\"\n");
 			appD->expectAttributeData = 0;
@@ -352,26 +347,26 @@ static errorCode sample_intData(Integer int_val, void *app_data)
 		else
 		{
 			printf("CH ");
-			sprintf(tmp_buf, "%lld", (long long int)int_val);
+			sprintf(tmp_buf, "%lld", (long long int) int_val);
 			printf("%s", tmp_buf);
 			printf("\n");
 		}
 	}
-	else if (appD->outputFormat == OUT_XML)
+	else if(appD->outputFormat == OUT_XML)
 	{
-		if (appD->expectAttributeData)
+		if(appD->expectAttributeData)
 		{
-			sprintf(tmp_buf, "%lld", (long long int)int_val);
+			sprintf(tmp_buf, "%lld", (long long int) int_val);
 			printf("%s", tmp_buf);
 			printf("\"");
 			appD->expectAttributeData = 0;
 		}
 		else
 		{
-			if (appD->unclosedElement)
+			if(appD->unclosedElement)
 				printf(">");
 			appD->unclosedElement = 0;
-			sprintf(tmp_buf, "%lld", (long long int)int_val);
+			sprintf(tmp_buf, "%lld", (long long int) int_val);
 			printf("%s", tmp_buf);
 		}
 	}
@@ -379,15 +374,15 @@ static errorCode sample_intData(Integer int_val, void *app_data)
 	return EXIP_OK;
 }
 
-static errorCode sample_booleanData(boolean bool_val, void *app_data)
+static errorCode sample_booleanData(boolean bool_val, void* app_data)
 {
-	struct appData *appD = (struct appData *)app_data;
+	struct appData* appD = (struct appData*) app_data;
 
-	if (appD->outputFormat == OUT_EXI)
+	if(appD->outputFormat == OUT_EXI)
 	{
-		if (appD->expectAttributeData)
+		if(appD->expectAttributeData)
 		{
-			if (bool_val)
+			if(bool_val)
 				printf("true\"\n");
 			else
 				printf("false\"\n");
@@ -397,17 +392,17 @@ static errorCode sample_booleanData(boolean bool_val, void *app_data)
 		else
 		{
 			printf("CH ");
-			if (bool_val)
+			if(bool_val)
 				printf("true\n");
 			else
 				printf("false\n");
 		}
 	}
-	else if (appD->outputFormat == OUT_XML)
+	else if(appD->outputFormat == OUT_XML)
 	{
-		if (appD->expectAttributeData)
+		if(appD->expectAttributeData)
 		{
-			if (bool_val)
+			if(bool_val)
 				printf("true\"");
 			else
 				printf("false\"");
@@ -415,11 +410,11 @@ static errorCode sample_booleanData(boolean bool_val, void *app_data)
 		}
 		else
 		{
-			if (appD->unclosedElement)
+			if(appD->unclosedElement)
 				printf(">");
 			appD->unclosedElement = 0;
 
-			if (bool_val)
+			if(bool_val)
 				printf("true");
 			else
 				printf("false");
@@ -429,15 +424,15 @@ static errorCode sample_booleanData(boolean bool_val, void *app_data)
 	return EXIP_OK;
 }
 
-static errorCode sample_floatData(Float fl_val, void *app_data)
+static errorCode sample_floatData(Float fl_val, void* app_data)
 {
-	struct appData *appD = (struct appData *)app_data;
+	struct appData* appD = (struct appData*) app_data;
 	char tmp_buf[30];
-	if (appD->outputFormat == OUT_EXI)
+	if(appD->outputFormat == OUT_EXI)
 	{
-		if (appD->expectAttributeData)
+		if(appD->expectAttributeData)
 		{
-			sprintf(tmp_buf, "%lldE%d", (long long int)fl_val.mantissa, fl_val.exponent);
+			sprintf(tmp_buf, "%lldE%d", (long long int) fl_val.mantissa, fl_val.exponent);
 			printf("%s", tmp_buf);
 			printf("\"\n");
 			appD->expectAttributeData = 0;
@@ -445,26 +440,26 @@ static errorCode sample_floatData(Float fl_val, void *app_data)
 		else
 		{
 			printf("CH ");
-			sprintf(tmp_buf, "%lldE%d", (long long int)fl_val.mantissa, fl_val.exponent);
+			sprintf(tmp_buf, "%lldE%d", (long long int) fl_val.mantissa, fl_val.exponent);
 			printf("%s", tmp_buf);
 			printf("\n");
 		}
 	}
-	else if (appD->outputFormat == OUT_XML)
+	else if(appD->outputFormat == OUT_XML)
 	{
-		if (appD->expectAttributeData)
+		if(appD->expectAttributeData)
 		{
-			sprintf(tmp_buf, "%lldE%d", (long long int)fl_val.mantissa, fl_val.exponent);
+			sprintf(tmp_buf, "%lldE%d", (long long int) fl_val.mantissa, fl_val.exponent);
 			printf("%s", tmp_buf);
 			printf("\"");
 			appD->expectAttributeData = 0;
 		}
 		else
 		{
-			if (appD->unclosedElement)
+			if(appD->unclosedElement)
 				printf(">");
 			appD->unclosedElement = 0;
-			sprintf(tmp_buf, "%lldE%d", (long long int)fl_val.mantissa, fl_val.exponent);
+			sprintf(tmp_buf, "%lldE%d", (long long int) fl_val.mantissa, fl_val.exponent);
 			printf("%s", tmp_buf);
 		}
 	}
@@ -472,27 +467,27 @@ static errorCode sample_floatData(Float fl_val, void *app_data)
 	return EXIP_OK;
 }
 
-static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data)
+static errorCode sample_dateTimeData(EXIPDateTime dt_val, void* app_data)
 {
-	struct appData *appD = (struct appData *)app_data;
+	struct appData* appD = (struct appData*) app_data;
 	char fsecBuf[30];
 	char tzBuf[30];
 	int i;
 
-	if (IS_PRESENT(dt_val.presenceMask, FRACT_PRESENCE))
+	if(IS_PRESENT(dt_val.presenceMask, FRACT_PRESENCE))
 	{
 		unsigned int tmpfValue = dt_val.fSecs.value;
 		int digitNum = 0;
 
 		fsecBuf[0] = '.';
 
-		while (tmpfValue)
+		while(tmpfValue)
 		{
 			digitNum++;
 			tmpfValue = tmpfValue / 10;
 		}
-		for (i = 0; i < dt_val.fSecs.offset + 1 - digitNum; i++)
-			fsecBuf[1 + i] = '0';
+		for(i = 0; i < dt_val.fSecs.offset + 1 - digitNum; i++)
+			fsecBuf[1+i] = '0';
 
 		sprintf(fsecBuf + 1 + i, "%d", dt_val.fSecs.value);
 	}
@@ -501,15 +496,15 @@ static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data)
 		fsecBuf[0] = '\0';
 	}
 
-	if (IS_PRESENT(dt_val.presenceMask, TZONE_PRESENCE))
+	if(IS_PRESENT(dt_val.presenceMask, TZONE_PRESENCE))
 	{
-		if (dt_val.TimeZone < 0)
+		if(dt_val.TimeZone < 0)
 			tzBuf[0] = '-';
 		else
 			tzBuf[0] = '+';
-		sprintf(tzBuf + 1, "%02d", dt_val.TimeZone / 64);
+		sprintf(tzBuf + 1, "%02d", dt_val.TimeZone/64);
 		tzBuf[3] = ':';
-		sprintf(tzBuf + 4, "%02d", dt_val.TimeZone % 64);
+		sprintf(tzBuf + 4, "%02d", dt_val.TimeZone%64);
 		tzBuf[6] = '\0';
 	}
 	else
@@ -517,14 +512,14 @@ static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data)
 		tzBuf[0] = '\0';
 	}
 
-	if (appD->outputFormat == OUT_EXI)
+	if(appD->outputFormat == OUT_EXI)
 	{
-		if (appD->expectAttributeData)
+		if(appD->expectAttributeData)
 		{
 			printf("%04d-%02d-%02dT%02d:%02d:%02d%s%s", dt_val.dateTime.tm_year + 1900,
-				   dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
-				   dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
-				   dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
+					dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
+					dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
+					dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
 			printf("\"\n");
 			appD->expectAttributeData = 0;
 		}
@@ -532,83 +527,83 @@ static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data)
 		{
 			printf("CH ");
 			printf("%04d-%02d-%02dT%02d:%02d:%02d%s%s", dt_val.dateTime.tm_year + 1900,
-				   dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
-				   dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
-				   dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
+					dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
+					dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
+					dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
 			printf("\n");
 		}
 	}
-	else if (appD->outputFormat == OUT_XML)
+	else if(appD->outputFormat == OUT_XML)
 	{
-		if (appD->expectAttributeData)
+		if(appD->expectAttributeData)
 		{
 			printf("%04d-%02d-%02dT%02d:%02d:%02d%s%s", dt_val.dateTime.tm_year + 1900,
-				   dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
-				   dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
-				   dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
+					dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
+					dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
+					dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
 			printf("\"");
 			appD->expectAttributeData = 0;
 		}
 		else
 		{
-			if (appD->unclosedElement)
+			if(appD->unclosedElement)
 				printf(">");
 			appD->unclosedElement = 0;
 			printf("%04d-%02d-%02dT%02d:%02d:%02d%s%s", dt_val.dateTime.tm_year + 1900,
-				   dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
-				   dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
-				   dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
+					dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
+					dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
+					dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
 		}
 	}
 
 	return EXIP_OK;
 }
 
-static errorCode sample_binaryData(const char *binary_val, Index nbytes, void *app_data)
+static errorCode sample_binaryData(const char* binary_val, Index nbytes, void* app_data)
 {
-	struct appData *appD = (struct appData *)app_data;
+	struct appData* appD = (struct appData*) app_data;
 
-	if (appD->outputFormat == OUT_EXI)
+	if(appD->outputFormat == OUT_EXI)
 	{
-		if (appD->expectAttributeData)
+		if(appD->expectAttributeData)
 		{
-			printf("[binary: %d bytes]", (int)nbytes);
+			printf("[binary: %d bytes]", (int) nbytes);
 			printf("\"\n");
 			appD->expectAttributeData = 0;
 		}
 		else
 		{
 			printf("CH ");
-			printf("[binary: %d bytes]", (int)nbytes);
+			printf("[binary: %d bytes]", (int) nbytes);
 			printf("\n");
 		}
 	}
-	else if (appD->outputFormat == OUT_XML)
+	else if(appD->outputFormat == OUT_XML)
 	{
-		if (appD->expectAttributeData)
+		if(appD->expectAttributeData)
 		{
-			printf("[binary: %d bytes]", (int)nbytes);
+			printf("[binary: %d bytes]", (int) nbytes);
 			printf("\"");
 			appD->expectAttributeData = 0;
 		}
 		else
 		{
-			if (appD->unclosedElement)
+			if(appD->unclosedElement)
 				printf(">");
 			appD->unclosedElement = 0;
-			printf("[binary: %d bytes]", (int)nbytes);
+			printf("[binary: %d bytes]", (int) nbytes);
 		}
 	}
 
 	return EXIP_OK;
 }
 
-static errorCode sample_qnameData(const QName qname, void *app_data)
+static errorCode sample_qnameData(const QName qname, void* app_data)
 {
-	struct appData *appD = (struct appData *)app_data;
-	if (appD->outputFormat == OUT_EXI)
+	struct appData* appD = (struct appData*) app_data;
+	if(appD->outputFormat == OUT_EXI)
 	{
-		if (appD->expectAttributeData)
+		if(appD->expectAttributeData)
 		{
 			printString(qname.uri);
 			printf(":");
@@ -625,9 +620,9 @@ static errorCode sample_qnameData(const QName qname, void *app_data)
 			printf("\n");
 		}
 	}
-	else if (appD->outputFormat == OUT_XML)
+	else if(appD->outputFormat == OUT_XML)
 	{
-		if (appD->expectAttributeData)
+		if(appD->expectAttributeData)
 		{
 			printString(qname.uri);
 			printf(":");
@@ -637,7 +632,7 @@ static errorCode sample_qnameData(const QName qname, void *app_data)
 		}
 		else
 		{
-			if (appD->unclosedElement)
+			if(appD->unclosedElement)
 				printf(">");
 			appD->unclosedElement = 0;
 			printString(qname.uri);
@@ -651,9 +646,9 @@ static errorCode sample_qnameData(const QName qname, void *app_data)
 
 // Stuff needed for the OUT_XML Output Format
 // ******************************************
-static void push(struct element **stack, struct element *el)
+static void push(struct element** stack, struct element* el)
 {
-	if (*stack == NULL)
+	if(*stack == NULL)
 		*stack = el;
 	else
 	{
@@ -662,46 +657,46 @@ static void push(struct element **stack, struct element *el)
 	}
 }
 
-static struct element *pop(struct element **stack)
+static struct element* pop(struct element** stack)
 {
-	if (*stack == NULL)
+	if(*stack == NULL)
 		return NULL;
 	else
 	{
-		struct element *result;
+		struct element* result;
 		result = *stack;
 		*stack = (*stack)->next;
 		return result;
 	}
 }
 
-static struct element *createElement(char *name)
+static struct element* createElement(char* name)
 {
-	struct element *el;
+	struct element* el;
 	el = malloc(sizeof(struct element));
-	if (el == NULL)
+	if(el == NULL)
 		exit(1);
 	el->next = NULL;
-	el->name = malloc(strlen(name) + 1);
-	if (el->name == NULL)
+	el->name = malloc(strlen(name)+1);
+	if(el->name == NULL)
 		exit(1);
 	strcpy(el->name, name);
 	return el;
 }
 
-static void destroyElement(struct element *el)
+static void destroyElement(struct element* el)
 {
 	free(el->name);
 	free(el);
 }
 // ******************************************
 
-static char lookupPrefix(struct appData *aData, String ns, unsigned char *prxHit, unsigned char *prefixIndex)
+static char lookupPrefix(struct appData* aData, String ns, unsigned char* prxHit, unsigned char* prefixIndex)
 {
 	int i;
-	for (i = 0; i < aData->prefixesCount; i++)
+	for(i = 0; i < aData->prefixesCount; i++)
 	{
-		if (stringEqualToAscii(ns, aData->prefixes[i]))
+		if(stringEqualToAscii(ns, aData->prefixes[i]))
 		{
 			*prefixIndex = i;
 			*prxHit = 1;
@@ -709,7 +704,7 @@ static char lookupPrefix(struct appData *aData, String ns, unsigned char *prxHit
 		}
 	}
 
-	if (aData->prefixesCount == MAX_PREFIXES)
+	if(aData->prefixesCount == MAX_PREFIXES)
 		return 1;
 	else
 	{

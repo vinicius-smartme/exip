@@ -65,4 +65,17 @@ errorCode readEXIChunkForParsing(EXIStream* strm, unsigned int numBytesToBeRead)
  */
 errorCode writeEncodedEXIChunk(EXIStream* strm);
 
+
+/**
+ * @brief Gets the available data on the Stream, if any
+ * @param[in] buffer BinaryBuffer to get/set the data from/to
+ * @param[in] offset offsets the destination buffer address
+ * @param[in] doSize number of bytes to write/read from/to the buffer
+ * @param[in] toRead indicates if it is a read operation. If false, means a write operation
+ * @param[in] doneSize number of bytes to written/read from/to the buffer
+ *
+ * @return The error code
+ */
+errorCode doReadWriteToStream(BinaryBuffer* buffer, Index offset, size_t doSize, boolean toRead, Index* doneSize) ;
+
 #endif /* IOUTIL_H_ */

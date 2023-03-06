@@ -83,6 +83,7 @@ static void parseSchema(const char* fileName, EXIPSchema* schema)
 		buffer.bufContent = buffer.bufLen;
 		buffer.ioStrm.readWriteToStream = NULL;
 		buffer.ioStrm.stream = NULL;
+		buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
 		tmp_err_code = generateSchemaInformedGrammars(&buffer, 1, SCHEMA_FORMAT_XSD_EXI, NULL, schema, NULL);
 
@@ -242,6 +243,7 @@ START_TEST (test_default_options)
 	buffer.bufLen = OUTPUT_BUFFER_SIZE;
 	buffer.ioStrm.readWriteToStream = NULL;
 	buffer.ioStrm.stream = NULL;
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
 	// Parsing steps:
 
@@ -314,7 +316,8 @@ START_TEST (test_strict_option)
 	buffer.bufLen = OUTPUT_BUFFER_SIZE;
 	buffer.ioStrm.readWriteToStream = NULL;
 	buffer.ioStrm.stream = NULL;
-
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
+	
 	// Parsing steps:
 
 	// I.A: First, read in the schema

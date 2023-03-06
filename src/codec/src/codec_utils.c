@@ -65,6 +65,7 @@ EXIPSchema parseSchema(char *xsdList)
             buffer[i].bufContent = buffer[i].bufLen;
             buffer[i].ioStrm.readWriteToStream = NULL;
             buffer[i].ioStrm.stream = NULL;
+            buffer[i].bufStrm = EMPTY_BUFFER_STREAM;
         }
     }
 

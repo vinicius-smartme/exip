@@ -42,6 +42,7 @@ START_TEST (test_createDocGrammar)
 	testStream.buffer.ioStrm.readWriteToStream = NULL;
 	testStream.buffer.ioStrm.stream = NULL;
 	testStream.context.bufferIndx = 0;
+	testStream.bufStrm = EMPTY_BUFFER_STREAM;
 	initAllocList(&testStream.memList);
 
 	err = createDocGrammar(&schema, NULL, 0);

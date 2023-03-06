@@ -95,6 +95,7 @@ static void parseSchema(const char* fileName, EXIPSchema* schema)
 		buffer.bufContent = buffer.bufLen;
 		buffer.ioStrm.readWriteToStream = NULL;
 		buffer.ioStrm.stream = NULL;
+		buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
 		tmp_err_code = generateSchemaInformedGrammars(&buffer, 1, SCHEMA_FORMAT_XSD_EXI, NULL, schema, NULL);
 
@@ -284,6 +285,7 @@ START_TEST (test_acceptance_for_A_01)
 	buffer.buf = buf;
 	buffer.bufContent = 0;
 	buffer.bufLen = INPUT_BUFFER_SIZE;
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
 	// Parsing steps:
 
@@ -446,6 +448,7 @@ START_TEST (test_acceptance_for_A_01_exip1)
 	buffer.buf = buf;
 	buffer.bufContent = 0;
 	buffer.bufLen = INPUT_BUFFER_SIZE;
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
 	// Parsing steps:
 
@@ -568,6 +571,7 @@ START_TEST (test_acceptance_for_A_01b)
 	buffer.buf = buf;
 	buffer.bufLen = OUTPUT_BUFFER_SIZE;
 	buffer.bufContent = 0;
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
 	// Serialization steps:
 
@@ -825,6 +829,7 @@ static error_code serializeIOMsg(char* buf, unsigned int buf_size, unsigned int*
 	buffer.buf = buf;
 	buffer.bufLen = buf_size;
 	buffer.bufContent = 0;
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
 	// Serialization steps:
 
@@ -922,6 +927,7 @@ static error_code serializeDevDescMsg(char* buf, unsigned int buf_size, unsigned
 	buffer.buf = buf;
 	buffer.bufLen = buf_size;
 	buffer.bufContent = 0;
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
 	// Serialization steps:
 
@@ -1062,6 +1068,7 @@ static error_code parseIOMsg(char* buf, unsigned int buf_size, BoolValue *val)
 	buffer.buf = buf;
 	buffer.bufLen = buf_size;
 	buffer.bufContent = buf_size;
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 	// Parsing steps:
 
 	// I.A: First, read in the schema
@@ -1134,7 +1141,8 @@ static error_code parseDevDescMsg(char* buf, unsigned int buf_size, DevDescribti
 	buffer.buf = buf;
 	buffer.bufLen = buf_size;
 	buffer.bufContent = buf_size;
-
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
+	
 	// Parsing steps:
 
 	// I.A: First, read in the schema

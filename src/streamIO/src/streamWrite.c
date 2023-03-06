@@ -25,9 +25,9 @@ errorCode writeNextBit(EXIStream* strm, boolean bit_val)
 	if(strm->buffer.bufLen <= strm->context.bufferIndx) // the whole buffer is filled! flush it!
 	{
 		Index numBytesWritten = 0;
-		if(strm->buffer.ioStrm.readWriteToStream == NULL)
-			return EXIP_BUFFER_END_REACHED;
-		numBytesWritten = strm->buffer.ioStrm.readWriteToStream(strm->buffer.buf, strm->buffer.bufLen, strm->buffer.ioStrm.stream);
+		errorCode error = doReadWriteToStream(&(strm->buffer), 0, strm->buffer.bufLen, FALSE, &numBytesWritten);
+		if (error != EXIP_OK)  
+			return error;
 		if(numBytesWritten < strm->buffer.bufLen)
 			return EXIP_BUFFER_END_REACHED;
 		strm->context.bitPointer = 0;

@@ -73,7 +73,8 @@ int main(int ac, char **av) {
 	buffer.bufLen = OUTPUT_BUFFER_SIZE;
 	buffer.ioStrm.readWriteToStream = NULL;
 	buffer.ioStrm.stream = NULL;
-
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
+	
 	if	(*files && parseSchema(files, &schema) == 0) {
 		schemaPtr	= &schema;
 	}
@@ -402,6 +403,7 @@ printf ("### %d %s\n", i, token);
 			buffer[i].bufContent = buffer[i].bufLen;
 			buffer[i].ioStrm.readWriteToStream = NULL;
 			buffer[i].ioStrm.stream = NULL;
+			buffer[i].bufStrm = EMPTY_BUFFER_STREAM;
 		}
 	}
 

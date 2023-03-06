@@ -162,6 +162,7 @@ START_TEST (test_addValueEntry)
 		testStrm.context.bitPointer = 0;
 		testStrm.buffer.bufLen = 0;
 		testStrm.buffer.bufContent = 0;
+		testStrm.buffer.bufStrm = EMPTY_BUFFER_STREAM;
 		tmp_err_code += createValueTable(&testStrm.valueTable);
 		testStrm.schema = memManagedAllocate(&testStrm.memList, sizeof(EXIPSchema));
 		fail_unless (testStrm.schema != NULL, "Memory alloc error");

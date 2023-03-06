@@ -76,6 +76,7 @@ VPATH += $(PROJECT_ROOT)/src/grammarGen/src
 VPATH += $(PROJECT_ROOT)/src/streamIO/src
 VPATH += $(PROJECT_ROOT)/src/stringTables/src
 VPATH += $(PROJECT_ROOT)/examples/simpleDecoding
+VPATH += $(PROJECT_ROOT)/examples/simpleDecodingBuffer
 VPATH += $(PROJECT_ROOT)/examples/simpleEncoding
 VPATH += $(PROJECT_ROOT)/utils/schemaHandling
 VPATH += $(PROJECT_ROOT)/utils/schemaHandling/output
@@ -114,6 +115,7 @@ EXIPG_UTIL_SRC += $(notdir $(wildcard $(PROJECT_ROOT)/utils/schemaHandling/outpu
 # Source files for the examples
 EXIPE_EXAMPLE_SRC = $(notdir $(wildcard $(PROJECT_ROOT)/examples/simpleEncoding/*.c))
 EXIPD_EXAMPLE_SRC = $(notdir $(wildcard $(PROJECT_ROOT)/examples/simpleDecoding/*.c))
+EXIPDB_EXAMPLE_SRC = $(notdir $(wildcard $(PROJECT_ROOT)/examples/simpleDecodingBuffer/*.c))
 
 LIB_SOURCES = $(CODEC_SRC) $(COMMON_SRC) $(CONTENT_IO_SRC) $(GRAMMAR_SRC) $(STREAM_IO_SRC) $(STRING_TABLES_SRC) $(notdir $(wildcard $(TARGET)/*.c))
 
@@ -128,11 +130,13 @@ endif
 
 EXIPE_OBJECTS=$(EXIPE_EXAMPLE_SRC:%.c=$(BIN_DIR)/%.o)
 EXIPD_OBJECTS=$(EXIPD_EXAMPLE_SRC:%.c=$(BIN_DIR)/%.o)
+EXIPDB_OBJECTS=$(EXIPDB_EXAMPLE_SRC:%.c=$(BIN_DIR)/%.o)
 EXIPG_OBJECTS=$(EXIPG_UTIL_SRC:%.c=$(BIN_DIR)/%.o)
 LIB_OBJECTS=$(LIB_SOURCES:%.c=$(BIN_DIR)/%.o)
 
 SOURCES_ALL = $(CODEC_SRC) $(COMMON_SRC) $(CONTENT_IO_SRC) $(GRAMMAR_SRC) $(STREAM_IO_SRC) $(STRING_TABLES_SRC)\
-	$(GRAMMAR_GEN_SRC) $(notdir $(wildcard $(TARGET)/*.c)) $(TESTS_SRC) $(EXIPG_UTIL_SRC) $(EXIPE_EXAMPLE_SRC) $(EXIPD_EXAMPLE_SRC)
+	$(GRAMMAR_GEN_SRC) $(notdir $(wildcard $(TARGET)/*.c)) $(TESTS_SRC) $(EXIPG_UTIL_SRC) $(EXIPE_EXAMPLE_SRC)\
+	$(EXIPD_EXAMPLE_SRC) $(EXIPDB_EXAMPLE_SRC)
 
 # Compiler include flags
 INCDIRS += -I$(PROJECT_ROOT)/src/codec/include
@@ -146,6 +150,7 @@ INCDIRS += -I$(PUBLIC_INCLUDE_DIR)
 INCDIRS += -I$(TARGET)
 INCDIRS += -I$(PROJECT_ROOT)/examples/simpleEncoding
 INCDIRS += -I$(PROJECT_ROOT)/examples/simpleDecoding
+INCDIRS += -I$(PROJECT_ROOT)/examples/simpleDecodingBuffer
 INCDIRS += -I$(PROJECT_ROOT)/tests
 INCDIRS += -I$(PROJECT_ROOT)/utils/schemaHandling/include
 
@@ -156,7 +161,7 @@ LDFLAGS += -L$(LIB_BIN_DIR)
 CHECK_TARGETS ?= streamIO stringTables grammar contentIO exip builtin_grammar strict_grammar emptyType xsi_type profile
 CHECK_BINS := $(foreach acheck, $(CHECK_TARGETS), $(TESTS_BIN_DIR)/test_$(acheck))
 
-EXAMPLE_BINS := $(EXAMPLES_BIN_DIR)/exipd $(EXAMPLES_BIN_DIR)/exipe
+EXAMPLE_BINS := $(EXAMPLES_BIN_DIR)/exipd $(EXAMPLES_BIN_DIR)/exipdb $(EXAMPLES_BIN_DIR)/exipe
 
 UTILS_BINS := $(UTILS_BIN_DIR)/exipg
 
@@ -221,7 +226,10 @@ $(EXAMPLES_BIN_DIR)/exipe: $(EXIPE_OBJECTS)
 		
 $(EXAMPLES_BIN_DIR)/exipd: $(EXIPD_OBJECTS)
 		$(COMPILE) $(LDFLAGS) $^ -lexip -o $@	
-		
+
+$(EXAMPLES_BIN_DIR)/exipdb: $(EXIPDB_OBJECTS)
+		$(COMPILE) $(LDFLAGS) $^ -lexip -o $@	
+
 # Build for the utils
 $(UTILS_BIN_DIR)/exipg: $(EXIPG_OBJECTS)
 		$(COMPILE) $(LDFLAGS) $^ -lexip -o $@

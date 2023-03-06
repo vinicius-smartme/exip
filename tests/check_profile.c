@@ -46,6 +46,7 @@ START_TEST (test_noLearning01)
 	buffer.bufLen = OUTPUT_BUFFER_SIZE;
 	buffer.ioStrm.readWriteToStream = NULL;
 	buffer.ioStrm.stream = NULL;
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
 	// Serialization steps:
 
@@ -156,7 +157,8 @@ START_TEST (test_noLearning02)
 	buffer.bufLen = OUTPUT_BUFFER_SIZE;
 	buffer.ioStrm.readWriteToStream = NULL;
 	buffer.ioStrm.stream = NULL;
-
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
+	
 	// Serialization steps:
 
 	// I: First initialize the header of the stream

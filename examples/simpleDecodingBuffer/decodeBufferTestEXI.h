@@ -6,19 +6,32 @@
 \===================================================================*/
 
 /**
- * @file decode.h
+ * @file decodeTestEXI.h
  * @brief Interface for a function decoding sample EXI messages
+ *
+ * @date Nov 5, 2012
+ * @author Rumen Kyusakov
+ * @version 0.5
+ * @par[Revision] $Id$
  */
 
-#ifndef DECODE_H_
-#define DECODE_H_
+#ifndef DECODETESTEXI_H_
+#define DECODETESTEXI_H_
 
 #include "procTypes.h"
 
 #define OUT_EXI 0
 #define OUT_XML 1
 
-errorCode decode_from_file(EXIPSchema *schemaPtr, unsigned char outFlag, void *in_stream, boolean outOfBandOpts, EXIOptions *opts);
-errorCode decode_from_buffer(EXIPSchema *schemaPtr, unsigned char outFlag, void *in_data, size_t inDataLen, boolean outOfBandOpts, EXIOptions *opts);
+errorCode decode(
+	EXIPSchema *schemaPtr, 
+	unsigned char outFlag, 
+	void *infile, 
+	void *indata, 
+	size_t inDataLen, 
+	boolean outOfBandOpts, 
+	EXIOptions *opts, 
+	size_t (*inputStream)(void *buf, size_t size, void *stream)
+	);
 
-#endif /* DECODE_H_ */
+#endif /* DECODETESTEXI_H_ */

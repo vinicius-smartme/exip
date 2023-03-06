@@ -66,6 +66,7 @@ static errorCode encode(EXIPSchema *schemaPtr, void *out_stream, size_t (*output
 	buffer.buf = buf;
 	buffer.bufLen = OUTPUT_BUFFER_SIZE;
 	buffer.bufContent = 0;
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
 	// Serialization steps:
 

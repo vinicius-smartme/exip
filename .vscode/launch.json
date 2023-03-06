@@ -1,0 +1,91 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug EXIP Decode",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/examples/exipd.exe",
+            "stopAtEntry": false,
+            "externalConsole": false,
+            "filterStdout": false,
+            "MIMode": "gdb",
+            /*"customLaunchSetupCommands": [
+                {
+                    "text": "target-run",
+                    "description": "run target",
+                    "ignoreFailures": false
+                }
+            ],*/
+            //"launchCompleteCommand": "exec-run",
+            "setupCommands": [
+                {
+                    "description": "gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "linux": {
+                "name": "Debug C Main - Linux",
+                "type": "cppdbg",
+                "request": "launch",
+                "program": "${workspaceFolder}/bin/examples/exipd",
+                "miDebuggerPath": "/usr/bin/gdb"
+            },
+            "windows": {
+                "name": "Debug C Main - Win",
+                "type": "cppdbg",
+                "request": "launch",
+                "program": "${workspaceFolder}\\bin\\examples\\exipd.exe",
+                "args": ["-exi", "-schema=exipd-test-schema-xsd.exi", "exipd-test-schema.exi"],
+                "miDebuggerPath": "C:\\Strawberry\\c\\bin\\gdb.exe",
+                "targetArchitecture": "x86",
+            },
+            "cwd": "${workspaceFolder}\\bin\\examples\\"
+        },
+        {
+            "name": "Debug EXIP Decode Buffer",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/examples/exipdb.exe",
+            "stopAtEntry": false,
+            "filterStdout": false,
+            "MIMode": "gdb",
+            /*"customLaunchSetupCommands": [
+                {
+                    "text": "target-run",
+                    "description": "run target",
+                    "ignoreFailures": false
+                }
+            ],*/
+            //"launchCompleteCommand": "exec-run",
+            "setupCommands": [
+                {
+                    "description": "gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "linux": {
+                "name": "Debug C Main - Linux",
+                "type": "cppdbg",
+                "request": "launch",
+                "program": "${workspaceFolder}/bin/examples/exipdb",
+                "miDebuggerPath": "/usr/bin/gdb"
+            },
+            "windows": {
+                "name": "Debug C Main - Win",
+                "type": "cppdbg",
+                "request": "launch",
+                "program": "${workspaceFolder}\\bin\\examples\\exipdb.exe",
+                "args": ["-exi", "-schema=exipd-test-schema-xsd.exi", "exipd-test-schema.exi"],
+                "miDebuggerPath": "C:\\Strawberry\\c\\bin\\gdb.exe",
+                "targetArchitecture": "x86",
+            },
+            "cwd": "${workspaceFolder}\\bin\\examples\\"
+        },
+    ]
+}

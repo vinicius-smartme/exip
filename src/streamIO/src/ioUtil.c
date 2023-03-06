@@ -103,7 +103,7 @@ errorCode readEXIChunkForParsing(EXIStream* strm, unsigned int numBytesToBeRead)
 	Index bytesCopied = strm->buffer.bufContent - strm->context.bufferIndx;
 	Index bytesRead = 0;
 
-	if(strm->buffer.ioStrm.readWriteToStream == NULL)
+	if(strm->buffer.ioStrm.readWriteToStream == NULL && strm->buffer.bufStrm.buf == NULL)
 		return EXIP_BUFFER_END_REACHED;
 
 	/* Checks for possible overlaps when copying the left Over Bits,
@@ -114,7 +114,10 @@ errorCode readEXIChunkForParsing(EXIStream* strm, unsigned int numBytesToBeRead)
 
 	memcpy(strm->buffer.buf, strm->buffer.buf + strm->context.bufferIndx, bytesCopied);
 
-	bytesRead = strm->buffer.ioStrm.readWriteToStream(strm->buffer.buf + bytesCopied, strm->buffer.bufLen - bytesCopied, strm->buffer.ioStrm.stream);
+	errorCode error = doReadWriteToStream(&(strm->buffer), bytesCopied, strm->buffer.bufLen - bytesCopied, TRUE, &bytesRead);
+	if (error != EXIP_OK)  
+		return error;
+
 	strm->buffer.bufContent = bytesCopied + bytesRead;
 	if(strm->buffer.bufContent < numBytesToBeRead)
 		return EXIP_UNEXPECTED_ERROR;
@@ -129,17 +132,61 @@ errorCode writeEncodedEXIChunk(EXIStream* strm)
 	char leftOverBits;
 	Index numBytesWritten = 0;
 
-	if(strm->buffer.ioStrm.readWriteToStream == NULL)
+	if(strm->buffer.ioStrm.readWriteToStream == NULL && strm->buffer.bufStrm.buf == NULL)
 		return EXIP_BUFFER_END_REACHED;
 
 	leftOverBits = strm->buffer.buf[strm->context.bufferIndx];
 
-	numBytesWritten = strm->buffer.ioStrm.readWriteToStream(strm->buffer.buf, strm->context.bufferIndx, strm->buffer.ioStrm.stream);
+	errorCode error = doReadWriteToStream(&(strm->buffer), 0, strm->context.bufferIndx, FALSE, &numBytesWritten);
+	if (error != EXIP_OK)  
+		return error;
 	if(numBytesWritten < strm->context.bufferIndx)
 		return EXIP_UNEXPECTED_ERROR;
 
 	strm->buffer.buf[0] = leftOverBits;
 	strm->context.bufferIndx = 0;
 
+	return EXIP_OK;
+}
+
+/*
+* Reads from the stream if there is a .readWriteToStream available. Otherwise, tries to read from a input buffer.
+* 
+* When parsing (toRead true): A function pointer used to fill the EXI buffer when emptied by reading "doSize" number of bytes
+* When serializing (toRead false): A function pointer used to write "doSize" number of bytes of the buffer
+* Offset will be applied to the internal buffer pointer and not to the stream/external buffer.
+* 
+* Return the error code
+*/
+errorCode doReadWriteToStream(BinaryBuffer* buffer, Index offset, size_t doSize, boolean toRead, Index* doneSize) 
+{
+	if(buffer->ioStrm.readWriteToStream == NULL)
+	{
+		if(buffer->bufStrm.bufContent == 0) {
+			*doneSize = 0;
+			return EXIP_BUFFER_END_REACHED;
+		}
+		else {
+			if (doSize + buffer->bufStrm.bufPtr > buffer->bufStrm.bufContent) {
+				*doneSize = buffer->bufStrm.bufContent - buffer->bufStrm.bufPtr;
+			} else {
+				*doneSize = doSize;
+			}
+			if(toRead) {
+				// Do read
+				memcpy(buffer->buf + offset, buffer->bufStrm.buf + buffer->bufStrm.bufPtr, *doneSize);
+				buffer->bufContent = offset + *doneSize;
+			}
+			else {
+				// Do write
+				memcpy(buffer->bufStrm.buf + buffer->bufStrm.bufPtr, buffer->buf + offset, *doneSize);
+				buffer->bufStrm.bufContent += *doneSize;
+			}
+			buffer->bufStrm.bufPtr += *doneSize;
+		}
+	}
+	else {
+		*doneSize = (Index)buffer->ioStrm.readWriteToStream(buffer->buf + offset, doSize, buffer->ioStrm.stream);
+	}
 	return EXIP_OK;
 }

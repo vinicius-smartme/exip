@@ -80,7 +80,8 @@ START_TEST (test_decode_ant_example01)
 	buffer.buf = buf;
 	buffer.bufContent = 0;
 	buffer.bufLen = INPUT_BUFFER_SIZE;
-
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
+	
 	// Parsing steps:
 
 	// I: First, define an external stream for the input to the parser if any

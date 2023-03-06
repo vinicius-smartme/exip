@@ -35,9 +35,10 @@ errorCode readNextBit(EXIStream* strm, boolean* bit_val)
 		strm->context.bitPointer = 0;
 		strm->context.bufferIndx = 0;
 		strm->buffer.bufContent = 0;
-		if(strm->buffer.ioStrm.readWriteToStream == NULL)
-			return EXIP_BUFFER_END_REACHED;
-		strm->buffer.bufContent = strm->buffer.ioStrm.readWriteToStream(strm->buffer.buf, strm->buffer.bufLen, strm->buffer.ioStrm.stream);
+		Index numBytesRead = 0;
+		errorCode error = doReadWriteToStream(&(strm->buffer), 0, strm->buffer.bufLen, TRUE, &numBytesRead);
+		if (error != EXIP_OK)  
+			return error;
 		if(strm->buffer.bufContent == 0)
 			return EXIP_BUFFER_END_REACHED;
 	}

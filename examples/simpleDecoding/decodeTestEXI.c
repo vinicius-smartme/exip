@@ -79,6 +79,7 @@ errorCode decode(EXIPSchema* schemaPtr, unsigned char outFlag, FILE *infile, boo
 	buffer.buf = buf;
 	buffer.bufLen = INPUT_BUFFER_SIZE;
 	buffer.bufContent = 0;
+	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 	// Parsing steps:
 
 	// I: First, define an external stream for the input to the parser if any, otherwise set to NULL
