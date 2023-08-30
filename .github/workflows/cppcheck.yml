@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@main
       # ===============================================================================================
       - name: Install additional packages
         run: |
@@ -32,13 +32,10 @@ jobs:
       # ===============================================================================================
       - name: Prepare cppcheck results
         run: |
-          find . -name 'cppcheck_report.*'
-          REPORT_PATH=$(find . -name 'cppcheck_report.*' -exec dirname {} \;)
-          cd REPORT_PATH
           mv cppcheck_report.txt cppcheck_report.xml
       # ===============================================================================================
       - name: Archive cppcheck results
         uses: actions/upload-artifact@v1
         with:
           name: cppcheck-report
-          path: $REPORT_PATH/cppcheck_report.xml
+          path: cppcheck_report.xml

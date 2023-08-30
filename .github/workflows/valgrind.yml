@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@main
       # ===============================================================================================
       - name: Install additional packages
         run: |
@@ -27,7 +27,7 @@ jobs:
       # Search for executable files (tests) and run valgrind on each of them
       - name: Run Valgrind
         run: |
-          find /bin/tests -type f -executable -print0 | while IFS= read -r -d '' executable; do
+          find ./bin/tests -type f -executable -print0 | while IFS= read -r -d '' executable; do
               echo "Checking: $executable"
               valgrind --leak-check=yes --leak-check=full --show-leak-kinds=all "$executable"
           done
