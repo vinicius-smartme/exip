@@ -16,9 +16,6 @@
 #include "procTypes.h"
 
 size_t readFileInputStream(void* buf, size_t readSize, void* stream);
-size_t readBufferInputStream(void* buf, size_t readSize, void* stream);
-
 size_t writeFileOutputStream(void* buf, size_t readSize, void* stream);
-size_t writeBufferOutputStream(void* buf, size_t readSize, void* stream);
 
 #endif /* CODE_COMMON_H_ */
