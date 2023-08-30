@@ -16,7 +16,7 @@ jobs:
       # ===============================================================================================
       - name: Install additional packages
         run: |
-          sudo apt-get install check
+          sudo apt-get -y --allow-remove-essential install valgrind check
       # ===============================================================================================
       - name: Build
         run: |
@@ -24,21 +24,10 @@ jobs:
           make all
           make check
       # ===============================================================================================
-      - name: Run cppcheck
-        uses: deep5050/cppcheck-action@main
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN}}
-          other_options: --xml
-      # ===============================================================================================
-      - name: Prepare cppcheck results
+      # Search for executable files (tests) and run valgrind on each of them
+      - name: Run Valgrind
         run: |
-          find . -name 'cppcheck_report.*'
-          REPORT_PATH=$(find . -name 'cppcheck_report.*' -exec dirname {} \;)
-          cd REPORT_PATH
-          mv cppcheck_report.txt cppcheck_report.xml
-      # ===============================================================================================
-      - name: Archive cppcheck results
-        uses: actions/upload-artifact@v1
-        with:
-          name: cppcheck-report
-          path: $REPORT_PATH/cppcheck_report.xml
+          find /bin/tests -type f -executable -print0 | while IFS= read -r -d '' executable; do
+              echo "Checking: $executable"
+              valgrind --leak-check=yes --leak-check=full --show-leak-kinds=all "$executable"
+          done

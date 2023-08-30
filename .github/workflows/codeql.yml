@@ -1,0 +1,41 @@
+name: CodeQL Analysis
+
+on: [push, workflow_dispatch]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # =============================================================================================================
+  analyze:
+    name: Code QL analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+    # ===============================================================================================
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    # ===============================================================================================
+    - name: Install additional packages
+      run: |
+        sudo apt-get install check
+    # ===============================================================================================
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: C
+    # ===============================================================================================
+    - name: Build
+      run: |
+        cd build/gcc
+        make all
+        make check
+    # ===============================================================================================
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@main
+      
