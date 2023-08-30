@@ -71,25 +71,25 @@ START_TEST (test_noLearning01)
 	fail_unless (tmp_err_code == EXIP_OK, "serialize.startDocument returns an error code %d", tmp_err_code);
 
 	getEmptyString(&uri);
-	tmp_err_code += asciiToString("root", &ln, &testStrm.memList, FALSE);
+	tmp_err_code += asciiToStringManaged("root", &ln, &testStrm.memList, FALSE);
 	tmp_err_code += serialize.startElement(&testStrm, qname, &valueType);
 	fail_unless (tmp_err_code == EXIP_OK, "serialize.startElement returns an error code %d", tmp_err_code);
 
-	tmp_err_code += asciiToString("a", &ln, &testStrm.memList, FALSE);
+	tmp_err_code += asciiToStringManaged("a", &ln, &testStrm.memList, FALSE);
 	tmp_err_code += serialize.startElement(&testStrm, qname, &valueType);
 	fail_unless (tmp_err_code == EXIP_OK, "serialize.startElement returns an error code %d", tmp_err_code);
 
-	tmp_err_code += asciiToString("bla", &chVal, &testStrm.memList, FALSE);
+	tmp_err_code += asciiToStringManaged("bla", &chVal, &testStrm.memList, FALSE);
 	tmp_err_code += serialize.stringData(&testStrm, chVal);
 	fail_unless (tmp_err_code == EXIP_OK, "serialize.stringData returns an error code %d", tmp_err_code);
 
 	tmp_err_code += serialize.endElement(&testStrm);
 
-	tmp_err_code += asciiToString("b", &ln, &testStrm.memList, FALSE);
+	tmp_err_code += asciiToStringManaged("b", &ln, &testStrm.memList, FALSE);
 	tmp_err_code += serialize.startElement(&testStrm, qname, &valueType);
 	fail_unless (tmp_err_code == EXIP_OK, "serialize.startElement returns an error code %d", tmp_err_code);
 
-	tmp_err_code += asciiToString("23", &chVal, &testStrm.memList, FALSE);
+	tmp_err_code += asciiToStringManaged("23", &chVal, &testStrm.memList, FALSE);
 	tmp_err_code += serialize.stringData(&testStrm, chVal);
 	fail_unless (tmp_err_code == EXIP_OK, "serialize.stringData returns an error code %d", tmp_err_code);
 
@@ -182,55 +182,55 @@ START_TEST (test_noLearning02)
 	fail_unless (tmp_err_code == EXIP_OK, "serialize.startDocument returns an error code %d", tmp_err_code);
 
 	getEmptyString(&uri);
-	tmp_err_code += asciiToString("root", &ln, &testStrm.memList, FALSE);
+	tmp_err_code += asciiToStringManaged("root", &ln, &testStrm.memList, FALSE);
 	tmp_err_code += serialize.startElement(&testStrm, qname, &valueType);
 	fail_unless (tmp_err_code == EXIP_OK, "serialize.startElement returns an error code %d", tmp_err_code);
 
-	tmp_err_code += asciiToString("a", &ln, &testStrm.memList, FALSE);
+	tmp_err_code += asciiToStringManaged("a", &ln, &testStrm.memList, FALSE);
 	tmp_err_code += serialize.startElement(&testStrm, qname, &valueType);
 	fail_unless (tmp_err_code == EXIP_OK, "serialize.startElement returns an error code %d", tmp_err_code);
 
-	tmp_err_code += asciiToString("bla", &chVal, &testStrm.memList, FALSE);
+	tmp_err_code += asciiToStringManaged("bla", &chVal, &testStrm.memList, FALSE);
 	tmp_err_code += serialize.stringData(&testStrm, chVal);
 	fail_unless (tmp_err_code == EXIP_OK, "serialize.stringData returns an error code %d", tmp_err_code);
 
 	tmp_err_code += serialize.endElement(&testStrm);
 
-	tmp_err_code += asciiToString("b", &ln, &testStrm.memList, FALSE);
+	tmp_err_code += asciiToStringManaged("b", &ln, &testStrm.memList, FALSE);
 	tmp_err_code += serialize.startElement(&testStrm, qname, &valueType);
 	fail_unless (tmp_err_code == EXIP_OK, "serialize.startElement returns an error code %d", tmp_err_code);
 
-	tmp_err_code += asciiToString("23", &chVal, &testStrm.memList, FALSE);
+	tmp_err_code += asciiToStringManaged("23", &chVal, &testStrm.memList, FALSE);
 	tmp_err_code += serialize.stringData(&testStrm, chVal);
 	fail_unless (tmp_err_code == EXIP_OK, "serialize.stringData returns an error code %d", tmp_err_code);
 
 	tmp_err_code += serialize.endElement(&testStrm);
 
-	tmp_err_code += asciiToString("a", &ln, &testStrm.memList, FALSE);
+	tmp_err_code += asciiToStringManaged("a", &ln, &testStrm.memList, FALSE);
 	tmp_err_code += serialize.startElement(&testStrm, qname, &valueType);
 	fail_unless (tmp_err_code == EXIP_OK, "serialize.startElement returns an error code %d", tmp_err_code);
 
-	tmp_err_code += asciiToString("bla", &chVal, &testStrm.memList, FALSE);
+	tmp_err_code += asciiToStringManaged("bla", &chVal, &testStrm.memList, FALSE);
 	tmp_err_code += serialize.stringData(&testStrm, chVal);
 	fail_unless (tmp_err_code == EXIP_OK, "serialize.stringData returns an error code %d", tmp_err_code);
 
 	tmp_err_code += serialize.endElement(&testStrm);
 
-	tmp_err_code += asciiToString("c", &ln, &testStrm.memList, FALSE);
+	tmp_err_code += asciiToStringManaged("c", &ln, &testStrm.memList, FALSE);
 	tmp_err_code += serialize.startElement(&testStrm, qname, &valueType);
 	fail_unless (tmp_err_code == EXIP_OK, "serialize.startElement returns an error code %d", tmp_err_code);
 
-	tmp_err_code += asciiToString("b", &ln, &testStrm.memList, FALSE);
+	tmp_err_code += asciiToStringManaged("b", &ln, &testStrm.memList, FALSE);
 	tmp_err_code += serialize.startElement(&testStrm, qname, &valueType);
 	fail_unless (tmp_err_code == EXIP_OK, "serialize.startElement returns an error code %d", tmp_err_code);
 
-	tmp_err_code += asciiToString("http://www.w3.org/2001/XMLSchema-instance", &uri, &testStrm.memList, FALSE);
-	tmp_err_code += asciiToString("type", &ln, &testStrm.memList, FALSE);
+	tmp_err_code += asciiToStringManaged("http://www.w3.org/2001/XMLSchema-instance", &uri, &testStrm.memList, FALSE);
+	tmp_err_code += asciiToStringManaged("type", &ln, &testStrm.memList, FALSE);
 	tmp_err_code += serialize.attribute(&testStrm, qname, TRUE, &valueType);
 	fail_unless (tmp_err_code == EXIP_OK, "serialize.attribute returns an error code %d", tmp_err_code);
 
-	tmp_err_code += asciiToString("http://www.w3.org/2001/XMLSchema", &uri, &testStrm.memList, FALSE);
-	tmp_err_code += asciiToString("integer", &ln, &testStrm.memList, FALSE);
+	tmp_err_code += asciiToStringManaged("http://www.w3.org/2001/XMLSchema", &uri, &testStrm.memList, FALSE);
+	tmp_err_code += asciiToStringManaged("integer", &ln, &testStrm.memList, FALSE);
 	tmp_err_code += serialize.qnameData(&testStrm, qname);
 	fail_unless (tmp_err_code == EXIP_OK, "serialize.qnameData returns an error code %d", tmp_err_code);
 

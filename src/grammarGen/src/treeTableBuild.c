@@ -714,9 +714,9 @@ static errorCode xsd_boolData(boolean bool_val, void* app_data)
 		if(ttpd->charDataPtr != NULL)
 		{
 			if(bool_val == TRUE)
-				TRY(asciiToString(TRUE_CHAR_STR, ttpd->charDataPtr, &ttpd->treeT->memList, TRUE));
+				TRY(asciiToStringManaged(TRUE_CHAR_STR, ttpd->charDataPtr, &ttpd->treeT->memList, TRUE));
 			else
-				TRY(asciiToString(FALSE_CHAR_STR, ttpd->charDataPtr, &ttpd->treeT->memList, TRUE));
+				TRY(asciiToStringManaged(FALSE_CHAR_STR, ttpd->charDataPtr, &ttpd->treeT->memList, TRUE));
 			ttpd->charDataPtr = NULL;
 		}
 		else
@@ -749,7 +749,7 @@ static errorCode xsd_intData(Integer int_val, void* app_data)
 	{
 		if(ttpd->charDataPtr != NULL)
 		{
-			TRY(asciiToString(tmp_str, ttpd->charDataPtr, &ttpd->treeT->memList, TRUE));
+			TRY(asciiToStringManaged(tmp_str, ttpd->charDataPtr, &ttpd->treeT->memList, TRUE));
 			ttpd->charDataPtr = NULL;
 		}
 		else

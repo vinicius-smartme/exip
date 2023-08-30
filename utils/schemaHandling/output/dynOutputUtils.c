@@ -57,7 +57,7 @@ errorCode dynExipSchemaOutput(EXIPSchema* schema, char* prefix, unsigned char ma
 
 			for(pfxIter = 0; pfxIter < schema->uriTable.uri[uriIter].pfxTable->count; pfxIter++)
 			{
-				fprintf(out, "tmp_err_code += asciiToString(\"");
+				fprintf(out, "tmp_err_code += asciiToStringManaged(\"");
 				fwrite(schema->uriTable.uri[uriIter].pfxTable->pfxStr[pfxIter].str, sizeof(CharType), schema->uriTable.uri[uriIter].pfxTable->pfxStr[pfxIter].length, out);
 				fprintf(out, "\", &pTable_%d->string_val[%d], &schema->memList, TRUE);\n\t", uriIter, pfxIter);
 			}

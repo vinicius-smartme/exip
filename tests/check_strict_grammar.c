@@ -120,7 +120,7 @@ static errorCode sample_fatalError(const errorCode code, const char* msg, void* 
 static errorCode sample_startDocument(void* app_data)
 {
 	appData* appD = (appData*) app_data;
-	asciiToString("SD", &appD->eventCode, &appD->allocList, TRUE);
+	asciiToStringManaged("SD", &appD->eventCode, &appD->allocList, TRUE);
 
 	return EXIP_OK;
 }
@@ -128,7 +128,7 @@ static errorCode sample_startDocument(void* app_data)
 static errorCode sample_endDocument(void* app_data)
 {
 	appData* appD = (appData*) app_data;
-	asciiToString("ED", &appD->eventCode, &appD->allocList, TRUE);
+	asciiToStringManaged("ED", &appD->eventCode, &appD->allocList, TRUE);
 
 	return EXIP_OK;
 }
@@ -136,7 +136,7 @@ static errorCode sample_endDocument(void* app_data)
 static errorCode sample_startElement(QName qname, void* app_data)
 {
 	appData* appD = (appData*) app_data;
-	asciiToString("SE", &appD->eventCode, &appD->allocList, TRUE);
+	asciiToStringManaged("SE", &appD->eventCode, &appD->allocList, TRUE);
 	cloneStringManaged(qname.uri, &appD->uri, &appD->allocList);
 	cloneStringManaged(qname.localName, &appD->localName, &appD->allocList);
 
@@ -146,7 +146,7 @@ static errorCode sample_startElement(QName qname, void* app_data)
 static errorCode sample_endElement(void* app_data)
 {
 	appData* appD = (appData*) app_data;
-	asciiToString("EE", &appD->eventCode, &appD->allocList, TRUE);
+	asciiToStringManaged("EE", &appD->eventCode, &appD->allocList, TRUE);
 
 	return EXIP_OK;
 }
@@ -154,7 +154,7 @@ static errorCode sample_endElement(void* app_data)
 static errorCode sample_attribute(QName qname, void* app_data)
 {
 	appData* appD = (appData*) app_data;
-	asciiToString("AT", &appD->eventCode, &appD->allocList, TRUE);
+	asciiToStringManaged("AT", &appD->eventCode, &appD->allocList, TRUE);
 	
 	/*
 	printString(qname.uri);
@@ -173,7 +173,7 @@ static errorCode sample_stringData(const String value, void* app_data)
 	appData* appD = (appData*) app_data;
 	if(appD->expectAttributeData)
 	{
-		asciiToString("AT", &appD->eventCode, &appD->allocList, TRUE);
+		asciiToStringManaged("AT", &appD->eventCode, &appD->allocList, TRUE);
 		/*
 		printString(&value);
 		printf("\"\n");
@@ -182,7 +182,7 @@ static errorCode sample_stringData(const String value, void* app_data)
 	}
 	else
 	{
-		asciiToString("CH", &appD->eventCode, &appD->allocList, TRUE);
+		asciiToStringManaged("CH", &appD->eventCode, &appD->allocList, TRUE);
 		/*
 		printString(&value);
 		printf("\n");
@@ -197,7 +197,7 @@ static errorCode sample_decimalData(Decimal value, void* app_data)
 	appData* appD = (appData*) app_data;
 	if(appD->expectAttributeData)
 	{
-		asciiToString("AT", &appD->eventCode, &appD->allocList, TRUE);
+		asciiToStringManaged("AT", &appD->eventCode, &appD->allocList, TRUE);
 		/*
 		printf("%.1f\"\n", (double) value);
 		*/
@@ -205,7 +205,7 @@ static errorCode sample_decimalData(Decimal value, void* app_data)
 	}
 	else
 	{
-		asciiToString("CH", &appD->eventCode, &appD->allocList, TRUE);
+		asciiToStringManaged("CH", &appD->eventCode, &appD->allocList, TRUE);
 	}
 
 	return EXIP_OK;
@@ -217,7 +217,7 @@ static errorCode sample_intData(Integer int_val, void* app_data)
 	/* char tmp_buf[30]; */
 	if(appD->expectAttributeData)
 	{
-		asciiToString("AT", &appD->eventCode, &appD->allocList, TRUE);
+		asciiToStringManaged("AT", &appD->eventCode, &appD->allocList, TRUE);
 		/*
 		sprintf(tmp_buf, "%lld", int_val);
 		printf("%s", tmp_buf);
@@ -227,7 +227,7 @@ static errorCode sample_intData(Integer int_val, void* app_data)
 	}
 	else
 	{
-		asciiToString("CH", &appD->eventCode, &appD->allocList, TRUE);
+		asciiToStringManaged("CH", &appD->eventCode, &appD->allocList, TRUE);
 		/*
 		sprintf(tmp_buf, "%lld", int_val);
 		printf("%s", tmp_buf);
@@ -244,7 +244,7 @@ static errorCode sample_floatData(Float fl_val, void* app_data)
 	/* char tmp_buf[30]; */
 	if(appD->expectAttributeData)
 	{
-		asciiToString("AT", &appD->eventCode, &appD->allocList, TRUE);
+		asciiToStringManaged("AT", &appD->eventCode, &appD->allocList, TRUE);
 		/*
 		sprintf(tmp_buf, "%lldE%d", fl_val.mantissa, fl_val.exponent);
 		printf("%s", tmp_buf);
@@ -254,7 +254,7 @@ static errorCode sample_floatData(Float fl_val, void* app_data)
 	}
 	else
 	{
-		asciiToString("CH", &appD->eventCode, &appD->allocList, TRUE);
+		asciiToStringManaged("CH", &appD->eventCode, &appD->allocList, TRUE);
 		/*
 		printf("%3d CH ", appD->eventCount);
 		sprintf(tmp_buf, "%lldE%d", fl_val.mantissa, fl_val.exponent);

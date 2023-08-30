@@ -42,6 +42,15 @@ errorCode allocateStringMemory(CharType** str, Index UCSchars);
 errorCode allocateStringMemoryManaged(CharType** str, Index UCSchars, AllocList* memList);
 
 /**
+ * @brief Allocate a memory for a string given the capacity in bytes.
+ * 
+ * @param str a pointer to a String (if initialized, it will be cleared)
+ * @param capacity String capacity in bytes
+ * @return errorCode 
+ */
+errorCode newStringWithCapacity(String* str, Index capacity);
+
+/**
  * @brief Writes a UCS [ISO/IEC 10646] code point to a string
  * It depends on the representation of the characters.
  * The memory needed for str should be allocated before the invocation
@@ -82,6 +91,25 @@ void getEmptyString(String* emptyStr);
 boolean isStringEmpty(const String* str);
 
 /**
+ * @brief Clears a string
+ * 
+ * @param str String to be cleared
+ * @return errorCode 
+ */
+errorCode clearString(String* str);
+
+/**
+ * @brief Transform a NULL terminated string of ASCII chars to String allocating memory for the CharType* when necessary.
+ * @param[in] inStr ASCII stream
+ * @param[in, out] outStr resulted string
+ * @param[in] clone Boolean indicating if outStr should reuse the memory allocated for inStr if possible.
+ * 					FALSE - if String implementation allows it - do not allocate new memory for the string
+ * 					TRUE - performs a memcpy and reallocate fresh memory if necessary
+ * @return Error handling code
+ */
+errorCode asciiToString(const char* inStr, String* outStr, boolean clone);
+
+/**
  * @brief Transform a NULL terminated string of ASCII chars to String allocating memory for the CharType*.
  * @param[in] inStr ASCII stream
  * @param[in, out] outStr resulted string
@@ -91,7 +119,7 @@ boolean isStringEmpty(const String* str);
  * 					TRUE - always allocate fresh memory for outStr and copy inStr there
  * @return Error handling code
  */
-errorCode asciiToString(const char* inStr, String* outStr, AllocList* memList, boolean clone);
+errorCode asciiToStringManaged(const char* inStr, String* outStr, AllocList* memList, boolean clone);
 
 /**
  * @brief Tests if two strings are equal
@@ -228,5 +256,13 @@ errorCode dateTimeToString(EXIPDateTime dt, String* outStr);
 void printString(const String* inStr);
 
 #endif /* EXIP_DEBUG */
+
+/**
+ * @brief Copies out a String content to a buffer
+ * 
+ * @param[in] buf Buffer to be filled with the content of the String
+ * @param[in] inStr Input string to be printed
+ */
+void sPrintString(char * buf, const String* inStr);
 
 #endif /* STRINGMANIPULATE_H_ */

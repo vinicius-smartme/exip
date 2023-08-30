@@ -28,6 +28,21 @@ errorCode allocateStringMemory(CharType** str, Index UCSchars)
 	return EXIP_OK;
 }
 
+errorCode newStringWithCapacity(String* str, Index capacity)
+{
+	if (!isStringEmpty(str)) {
+		clearString(str);
+	}
+	str->str = calloc(capacity, sizeof(CharType));
+	if(str->str == NULL)
+		return EXIP_MEMORY_ALLOCATION_ERROR;
+	else 
+	{
+		str->length = capacity;
+		return EXIP_OK;
+	}
+}
+
 errorCode allocateStringMemoryManaged(CharType** str, Index UCSchars, AllocList* memList)
 {
 	(*str) = (CharType*) memManagedAllocate(memList, sizeof(CharType)*UCSchars);
@@ -61,7 +76,59 @@ boolean isStringEmpty(const String* str)
 	return 0;
 }
 
-errorCode asciiToString(const char* inStr, String* outStr, AllocList* memList, boolean clone)
+errorCode clearString(String* str)
+{
+	if (!str) {
+		return EXIP_INVALID_INPUT;
+	}
+	if (str->length > 0) {
+		free(str->str);
+	}
+	str->str = NULL;
+	str->length = 0;
+	return EXIP_OK;
+}
+
+errorCode asciiToString(const char* inStr, String* outStr, boolean clone) {
+	size_t inStrLen;
+
+	if (!inStr) {
+		return EXIP_INVALID_INPUT;
+	} else {
+		inStrLen = strlen(inStr);
+	}
+
+	if (!outStr) {
+		return EXIP_INVALID_INPUT;
+	}
+
+	if(inStrLen > 0)  // If == 0 -> empty string
+	{
+		if (!clone) {
+			clearString(outStr);
+			outStr->str = (CharType*) inStr;
+			outStr->length = inStrLen;
+			return EXIP_OK;
+		}
+		else {
+			if (outStr->length < inStrLen) 
+			{
+				clearString(outStr);
+				outStr->str = calloc(inStrLen, sizeof(CharType));
+				if(outStr->str == NULL)
+					return EXIP_MEMORY_ALLOCATION_ERROR;
+				outStr->length = inStrLen;
+			}
+			memcpy(outStr->str, inStr, inStrLen);
+			return EXIP_OK;
+		}
+	}
+	else
+		clearString(outStr);
+	return EXIP_OK;
+}
+
+errorCode asciiToStringManaged(const char* inStr, String* outStr, AllocList* memList, boolean clone)
 {
 	outStr->length = strlen(inStr);
 	if(outStr->length > 0)  // If == 0 -> empty string
@@ -278,3 +345,11 @@ void printString(const String* inStr)
 }
 
 #endif /* EXIP_DEBUG */
+
+void sPrintString(char * buf, const String* inStr)
+{
+	if(inStr->length == 0)
+		return;
+
+	sprintf(buf, "%.*s", inStr->length, inStr->str);
+}

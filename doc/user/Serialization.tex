@@ -130,11 +130,11 @@ serialize.attribute(&strm, qname, VALUE_TYPE_STRING);
 String ch; /* EXIP string representing a string value */
 
 /* Convert a static ASCII string constant to EXIP string type */
-asciiToString("attribute value", &ch, &strm.memList, FALSE);
+asciiToStringManaged("attribute value", &ch, &strm.memList, FALSE);
 
 serialize.stringData(&strm, ch); /* Encode the value of the attribute */
 
-asciiToString("element value", &ch, &strm.memList, FALSE);
+asciiToStringManaged("element value", &ch, &strm.memList, FALSE);
 
 serialize.stringData(&strm, ch); /* The value of the <rootElement> */
 
@@ -200,7 +200,7 @@ through the \texttt{xsi:type} attribute.
   All of these states can be set during initialization - Step \ref{item:initialization}:
 \begin{lstlisting}
 String schemaID;
-asciiToString("http://www.ltu.se/schema", &schemaID, &strm.memList, FALSE);
+asciiToStringManaged("http://www.ltu.se/schema", &schemaID, &strm.memList, FALSE);
 serialize.initStream(&strm, buffer, OUTPUT_BUFFER_SIZE, &out, NULL, 
 					SCHEMA_ID_SET, schemaID);                           
 \end{lstlisting}

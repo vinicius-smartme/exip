@@ -799,7 +799,7 @@ START_TEST (test_encodeString)
   testStream.buffer.ioStrm.stream = NULL;
   testStream.buffer.bufStrm = EMPTY_BUFFER_STREAM;
   testStream.context.bufferIndx = 0;
-  asciiToString("TEST encodeString()", &testStr, &testStream.memList, FALSE);
+  asciiToStringManaged("TEST encodeString()", &testStr, &testStream.memList, FALSE);
 
   err = encodeString(&testStream, &testStr);
 
