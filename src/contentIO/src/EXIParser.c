@@ -67,13 +67,16 @@ errorCode parseHeader(Parser* parser, boolean outOfBandOpts)
 {
 	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
 
+	printf("Decoding the header...\n");
 	TRY(decodeHeader(&parser->strm, outOfBandOpts));
 
 	if(parser->strm.header.opts.valuePartitionCapacity > 0)
 	{
+		printf("Creating the Value table...\n");
 		TRY(createValueTable(&parser->strm.valueTable));
 	}
 
+	printf("Starting document...\n");
 	// The parsing of the header is successful
 	// TODO: Consider removing the startDocument all together instead of invoking it always here?
 	if(parser->handler.startDocument != NULL)

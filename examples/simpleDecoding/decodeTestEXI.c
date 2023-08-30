@@ -87,6 +87,7 @@ errorCode decode(EXIPSchema* schemaPtr, unsigned char outFlag, FILE *infile, boo
 	buffer.ioStrm.stream = infile;
 
 	// II: Second, initialize the parser object
+	printf("Initializing the parser...\n");
 	TRY(parse.initParser(&testParser, buffer, &parsingData));
 
 	// III: Initialize the parsing data and hook the callback handlers to the parser object.
@@ -116,7 +117,7 @@ errorCode decode(EXIPSchema* schemaPtr, unsigned char outFlag, FILE *infile, boo
 	testParser.handler.qnameData = sample_qnameData;
 
 	// IV: Parse the header of the stream
-
+	printf("Parsing the header...\n");
 	TRY(parse.parseHeader(&testParser, outOfBandOpts));
 
 	// IV.1: Set the schema to be used for parsing.
@@ -124,7 +125,7 @@ errorCode decode(EXIPSchema* schemaPtr, unsigned char outFlag, FILE *infile, boo
 	// parser.strm.header.opts.schemaIDMode and
 	// parser.strm.header.opts.schemaID respectively
 	// If schemaless mode, use setSchema(&parser, NULL);
-
+	printf("Parsing the schema...\n");
 	TRY(parse.setSchema(&testParser, schemaPtr));
 
 	// V: Parse the body of the EXI stream

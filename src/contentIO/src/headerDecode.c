@@ -56,6 +56,7 @@ errorCode decodeHeader(EXIStream* strm, boolean outOfBandOpts)
 	unsigned int bits_val = 0;
 	boolean boolVal = FALSE;
 
+	printf("Decoding header pt 1...\n");
 	DEBUG_MSG(INFO, DEBUG_CONTENT_IO, (">Start EXI header decoding\n"));
 	TRY(readBits(strm, 2, &bits_val));
 	if(bits_val == 2)  // The header Distinguishing Bits i.e. no EXI Cookie
@@ -89,6 +90,7 @@ errorCode decodeHeader(EXIStream* strm, boolean outOfBandOpts)
 		return EXIP_INVALID_EXI_HEADER;
 	}
 
+	printf("Decoding header pt 2...\n");
 	// Read the Presence Bit for EXI Options
 	TRY(readNextBit(strm, &boolVal));
 
@@ -117,6 +119,7 @@ errorCode decodeHeader(EXIStream* strm, boolean outOfBandOpts)
 		}
 	}
 
+	printf("Decoding header pt 3...\n");
 	// Read the Version type
 	TRY(readNextBit(strm, &boolVal));
 
@@ -133,6 +136,7 @@ errorCode decodeHeader(EXIStream* strm, boolean outOfBandOpts)
 
 	DEBUG_MSG(INFO, DEBUG_CONTENT_IO, (">EXI version: %d\n", strm->header.version_number));
 
+	printf("Decoding header pt 4...\n");
 	if(strm->header.has_options == 1)
 	{
 		Parser optionsParser;

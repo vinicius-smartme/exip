@@ -109,7 +109,9 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "Unable to open file %s\n", sourceFileName);
 			exit(1);
 		}
-	}
+	} 
+
+	printf("Starting decoding...\n");
 
 	tmp_err_code = decode(schemaPtr, outFlag, infile, outOfBandOpts, opsPtr, readFileInputStream);
 

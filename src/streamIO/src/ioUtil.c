@@ -163,11 +163,13 @@ errorCode doReadWriteToStream(BinaryBuffer* buffer, Index offset, size_t doSize,
 	if(buffer->ioStrm.readWriteToStream == NULL)
 	{
 		if(buffer->bufStrm.bufContent == 0) {
+			printf("No Content to read/write \n");
 			*doneSize = 0;
 			return EXIP_BUFFER_END_REACHED;
 		}
 		else {
 			if (doSize + buffer->bufStrm.bufPtr > buffer->bufStrm.bufContent) {
+				printf("doSize outside bounds");
 				*doneSize = buffer->bufStrm.bufContent - buffer->bufStrm.bufPtr;
 			} else {
 				*doneSize = doSize;
@@ -183,10 +185,12 @@ errorCode doReadWriteToStream(BinaryBuffer* buffer, Index offset, size_t doSize,
 				buffer->bufStrm.bufContent += *doneSize;
 			}
 			buffer->bufStrm.bufPtr += *doneSize;
+			printf("from/to buffer(offset: %d, size: %d, read %d)\n", offset, doSize, *doneSize);
 		}
 	}
 	else {
 		*doneSize = (Index)buffer->ioStrm.readWriteToStream(buffer->buf + offset, doSize, buffer->ioStrm.stream);
+		printf("from/to stream(offset: %d, size: %d, read %d)\n", offset, doSize, *doneSize);
 	}
 	return EXIP_OK;
 }
