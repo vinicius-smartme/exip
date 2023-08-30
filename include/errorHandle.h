@@ -190,7 +190,13 @@ enum errorCode
 	  * Send a signal to the EXIP parser from a content handler callback
 	  * for gracefully stopping the EXI stream parsing.
 	  */
-	 EXIP_HANDLER_STOP                           =17
+	 EXIP_HANDLER_STOP                           =17,
+	 /** Received EXI value type or event
+	  * that is invalid according
+	  * to the specification */
+	 EXIP_INVALID_INPUT                      	 =18,
+	 /** Received EXI event that is invalid or not expected */
+	 EXIP_INVALID_EVENT                      	 =19
 };
 
 typedef enum errorCode errorCode;
