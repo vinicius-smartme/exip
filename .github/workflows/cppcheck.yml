@@ -1,4 +1,4 @@
-name: C_ESP32
+name: Static_analysis
 
 on:
   push:
@@ -26,7 +26,6 @@ jobs:
       - name: Build
         run: |
           cd build/gcc
-          ./configure
           make all
       # ===============================================================================================
       - name: Run cppcheck

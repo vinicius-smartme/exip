@@ -10,9 +10,6 @@ jobs:
   linux_build_arm7:
     name: Linux build Arm7 (target)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: build/gcc
     steps:
       # ===============================================================================================
       # Environment Setup
@@ -59,5 +56,7 @@ jobs:
       - name: Build
         run: |
           cd build/gcc
-          ./configure --prefix=/home/export/rootfs --host=arm-linux-gnueabi CC=arm-linux-gnueabihf-gcc CXX=arm-linux-gnueabihf-g++ LD=arm-linux-gnueabihf-ld AR=arm-linux-gnueabihf-ar
+          echo Updating compiler to arm-linux-gnueabihf
+          awk '/COMPILER = m32c-elf-gcc/ { $0 = "COMPILER = arm-linux-gnueabihf-gcc" } 1' contiki/build-params.mk > contiki/build-params.mk
+          awk '/ARCHIVER = m32c-elf-ar/ { $0 = "COMPILER = arm-linux-gnueabihf-ar" } 1' contiki/build-params.mk > contiki/build-params.mk
           make all
