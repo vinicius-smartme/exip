@@ -1,0 +1,63 @@
+name: Linux_Target
+
+on: [push]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+# =============================================================================================================
+  linux_build_arm7:
+    name: Linux build Arm7 (target)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: build/gcc
+    steps:
+      # ===============================================================================================
+      # Environment Setup
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Fix source list
+        run: |
+          sudo rm /etc/apt/sources.list
+          sudo touch /etc/apt/sources.list
+          sudo add-apt-repository 'deb [arch=armel,armhf] http://ports.ubuntu.com/ubuntu-ports focal main universe restricted multiverse'
+          sudo add-apt-repository 'deb [arch=armel,armhf] http://ports.ubuntu.com/ubuntu-ports focal-updates main universe restricted multiverse'
+          sudo add-apt-repository 'deb [arch=armel,armhf] http://ports.ubuntu.com/ubuntu-ports focal-security main universe restricted multiverse'
+          sudo add-apt-repository 'deb [arch=armel,armhf] http://ports.ubuntu.com/ubuntu-ports focal-backports main universe restricted multiverse'
+          sudo add-apt-repository 'deb [arch=amd64] http://azure.archive.ubuntu.com/ubuntu focal main universe restricted multiverse'
+          sudo add-apt-repository 'deb [arch=amd64] http://azure.archive.ubuntu.com/ubuntu focal-updates main universe restricted multiverse'
+          sudo add-apt-repository 'deb [arch=amd64] http://azure.archive.ubuntu.com/ubuntu focal-security main universe restricted multiverse'
+          sudo add-apt-repository 'deb [arch=amd64] http://azure.archive.ubuntu.com/ubuntu focal-backports main universe restricted multiverse'
+      # ===============================================================================================
+      - name: Update sources
+        run: |
+          sudo dpkg --add-architecture armhf
+          sudo apt-get install -y apt-transport-https
+          sudo apt-get -y update --fix-missing
+          sudo apt autoremove
+          sudo apt-get -y update --fix-missing
+      # ===============================================================================================
+      - name: Install dependencies
+        run: |
+          sudo apt-get -y install gcc-arm-linux-gnueabihf gcc-multilib-arm-linux-gnueabihf
+          sudo apt-get -y --allow-remove-essential install libgcc-s1:armhf libc6:armhf check:armhf
+      # sudo apt-get -y install libnl-3-200:armhf libnl-3-dev:armhf libnl-genl-3-200:armhf libnl-genl-3-dev:armhf
+      # sudo apt-get -y install lm-sensors:armhf libsensors4-dev:armhf libsensors5:armhf
+      # ===============================================================================================
+      - name: Update paths
+        run: |
+          export PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig:$PKG_CONFIG_PATH
+          export PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR:/usr/lib/arm-linux-gnueabihf/pkgconfig
+      # sudo cp /usr/lib/arm-linux-gnueabihf/pkgconfig/libnl-3.0.pc /usr/lib/pkgconfig/
+      # sudo cp /usr/lib/arm-linux-gnueabihf/pkgconfig/libnl-3.0.pc /usr/share/pkgconfig/
+      # sudo cp /usr/lib/arm-linux-gnueabihf/pkgconfig/libnl-genl-3.0.pc /usr/lib/pkgconfig/
+      # sudo cp /usr/lib/arm-linux-gnueabihf/pkgconfig/libnl-genl-3.0.pc /usr/share/pkgconfig/
+      # ===============================================================================================
+      # Building project
+      - name: Build
+        run: |
+          cd build/gcc
+          ./configure --prefix=/home/export/rootfs --host=arm-linux-gnueabi CC=arm-linux-gnueabihf-gcc CXX=arm-linux-gnueabihf-g++ LD=arm-linux-gnueabihf-ld AR=arm-linux-gnueabihf-ar
+          make all

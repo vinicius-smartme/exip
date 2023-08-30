@@ -1,0 +1,48 @@
+name: C_ESP32
+
+on:
+  push:
+    branches: 
+    - '**'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+# =============================================================================================================
+  build_esp32:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+      # ===============================================================================================
+      - name: Install additional packages
+        run: |
+          sudo apt-get install check
+      # ===============================================================================================
+      # sudo apt-get install check
+      - name: Build
+        run: |
+          cd build/gcc
+          ./configure
+          make all
+      # ===============================================================================================
+      - name: Run cppcheck
+        uses: deep5050/cppcheck-action@main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN}}
+          other_options: --xml
+      # ===============================================================================================
+      # Archive cppcheck results
+      - name: Prepare cppcheck results
+        run: |
+          cd ~/work/mithral-hall-application/mithral-hall-application
+          mv cppcheck_report.txt cppcheck_report.xml
+      # ===============================================================================================
+      - name: Archive cppcheck results
+        uses: actions/upload-artifact@v1
+        with:
+          name: cppcheck-report
+          path: cppcheck_report.xml
