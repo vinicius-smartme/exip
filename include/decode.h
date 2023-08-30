@@ -14,11 +14,26 @@
 #define DECODE_H_
 
 #include "procTypes.h"
+#include "codec_utils.h"
 
 #define OUT_EXI 0
 #define OUT_XML 1
 
-errorCode decode_from_file(EXIPSchema *schemaPtr, unsigned char outFlag, void *in_stream, boolean outOfBandOpts, EXIOptions *opts);
-errorCode decode_from_buffer(EXIPSchema *schemaPtr, unsigned char outFlag, void *in_data, size_t inDataLen, boolean outOfBandOpts, EXIOptions *opts);
+errorCode decode_from_file(
+	EXIPSchema *schemaPtr, 
+	unsigned char outFlag, 
+	boolean outOfBandOpts, 
+	EXIOptions *opts,
+	void *inStreamPath, 
+	List *outData);
+
+errorCode decode_from_buffer(
+	EXIPSchema *schemaPtr, 
+	unsigned char outFlag, 
+	boolean outOfBandOpts, 
+	EXIOptions *opts,
+	void *inData, 
+	size_t inDataLen, 
+	List *outData);
 
 #endif /* DECODE_H_ */

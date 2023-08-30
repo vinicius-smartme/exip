@@ -28,6 +28,11 @@ struct appData
 	unsigned char unclosedElement;	  // needed for the OUT_XML Output Format
 	char prefixes[MAX_PREFIXES][200]; // needed for the OUT_XML Output Format
 	unsigned char prefixesCount;	  // needed for the OUT_XML Output Format
+	/**
+	 * @brief Decoded data to be outputted
+	 * 
+	 */
+	List outData;
 };
 
 // Stuff needed for the OUT_XML Output Format
@@ -65,14 +70,15 @@ static errorCode sample_binaryData(const char *binary_val, Index nbytes, void *a
 static errorCode sample_qnameData(const QName qname, void *app_data);
 
 static errorCode decode(
-	EXIPSchema *schemaPtr, 
-	unsigned char outFlag, 
-	void *in_stream, 
-	void *in_data, 
-	size_t inDataLen, 
-	boolean outOfBandOpts, 
-	EXIOptions *opts, 
-	size_t (*inputStream)(void *buf, size_t size, void *stream)
+	EXIPSchema *schemaPtr,
+	unsigned char outFlag,
+	boolean outOfBandOpts,
+	EXIOptions *opts,
+	void *inStreamPath,
+	size_t (*inputStream)(void *buf, size_t size, void *stream),
+	void *inData,
+	size_t inDataLen,
+	List *outData
 	)
 {
 	Parser testParser;
@@ -89,10 +95,10 @@ static errorCode decode(
 
 	// I: First, define an external stream for the input to the parser if any, otherwise tries as external buffer
 	buffer.ioStrm.readWriteToStream = inputStream;
-	buffer.ioStrm.stream = in_stream;
-	if (inputStream == NULL && in_data != NULL && inDataLen > 0)
+	buffer.ioStrm.stream = inStreamPath;
+	if (inputStream == NULL && inData != NULL && inDataLen > 0)
 	{
-		buffer.bufStrm.buf = in_data;
+		buffer.bufStrm.buf = inData;
 		buffer.bufStrm.bufContent = inDataLen;
 		buffer.bufStrm.bufLen = inDataLen;
 	}
@@ -107,6 +113,7 @@ static errorCode decode(
 	parsingData.unclosedElement = 0;
 	parsingData.prefixesCount = 0;
 	parsingData.outputFormat = outFlag;
+	parsingData.outData = new_list();
 	if (outOfBandOpts && opts != NULL)
 		testParser.strm.header.opts = *opts;
 
@@ -125,7 +132,7 @@ static errorCode decode(
 	testParser.handler.dateTimeData = sample_dateTimeData;
 	testParser.handler.binaryData = sample_binaryData;
 	testParser.handler.qnameData = sample_qnameData;
-
+	
 	// IV: Parse the header of the stream
 
 	TRY(parse.parseHeader(&testParser, outOfBandOpts));
@@ -149,60 +156,162 @@ static errorCode decode(
 
 	parse.destroyParser(&testParser);
 
+	outData->size = parsingData.outData.size;
+	outData->head = parsingData.outData.head;
+	outData->tail = parsingData.outData.tail;
+
+	printf("Output size: %d (%p)\n", outData->size, (void *)outData);
+	
 	if (tmp_err_code == EXIP_PARSING_COMPLETE)
 		return EXIP_OK;
 	else
 		return tmp_err_code;
 }
 
-errorCode decode_from_file(EXIPSchema *schemaPtr, unsigned char outFlag, void *in_stream, boolean outOfBandOpts, EXIOptions *opts)
+errorCode decode_from_file(
+	EXIPSchema *schemaPtr, 
+	unsigned char outFlag, 
+	boolean outOfBandOpts, 
+	EXIOptions *opts,
+	void *inStreamPath, 
+	List *outData)
 {
-	return decode(schemaPtr, outFlag, in_stream, NULL, 0, outOfBandOpts, opts, readFileInputStream);
+	return decode(
+		schemaPtr,
+		outFlag,
+		outOfBandOpts,
+		opts,
+		inStreamPath,
+		readFileInputStream,
+		NULL,
+		0,
+		outData);
 }
 
-errorCode decode_from_buffer(EXIPSchema *schemaPtr, unsigned char outFlag, void *in_data, size_t inDataLen, boolean outOfBandOpts, EXIOptions *opts)
+errorCode decode_from_buffer(
+	EXIPSchema *schemaPtr, 
+	unsigned char outFlag, 
+	boolean outOfBandOpts, 
+	EXIOptions *opts,
+	void *inData, 
+	size_t inDataLen, 
+	List *outData)
 {
-	return decode(schemaPtr, outFlag, NULL, in_data, inDataLen, outOfBandOpts, opts, (EXIOptions *)NULL);
+	return decode
+	(
+		schemaPtr,
+		outFlag,
+		outOfBandOpts,
+		opts, 
+		NULL, 
+		NULL,
+		inData, 
+		inDataLen,
+		outData);
 }
 
+/**
+ * @brief Update the last attribute located on the List tail if isAttribute is true. 
+ * Otherwise, add a new entry to the list.
+ * 
+ * @param isAttribute If the msg item is an attribute. Otherwise, considered as a new entry.
+ * @param list The list to be updated.
+ * @param msg The message to be added to the list.
+ */
+static void updateListLastAttribute(unsigned char isAttribute, List *list, char *msg) {
+	size_t elementSize = 0;
+	if (isAttribute)
+	{
+		// This is not a new list entry. So we need to get the tail from the list
+		// and append the new string to it.
+		Node *tail;
+		
+		if (list->tail != NULL) 
+		{
+			tail = list->tail;
+		} else {
+			printf("Error: Failed to get the Tail from the list.\n");
+			elementSize = list->size;
+			tail = getNth(list, elementSize);
+		}
+
+		elementSize = tail->size;
+		size_t msgLen = strlen(msg) + 1;
+		char *msg_buffer = calloc(elementSize + msgLen, sizeof(char));
+		if (!msg_buffer) {
+			fprintf(stderr, "Memory allocation error!");
+			exit(-1);
+		}
+		strcpy(msg_buffer, tail->data);
+		free(tail->data);
+		strcpy(msg_buffer + elementSize, msg);
+		tail->data = msg_buffer;
+		tail->size = strlen(msg_buffer);
+	}
+	else
+	{
+		push_back(list, (void *)msg, strlen(msg));
+	}
+}
 static errorCode sample_fatalError(const errorCode code, const char *msg, void *app_data)
 {
-	printf("\n%d : FATAL ERROR: %s\n", code, msg);
+	char err_msg[128];
+	sprintf(err_msg, "\n%d : FATAL ERROR: %s\n\0", code, msg);
+	printf("%s", err_msg);
+	struct appData *appD = (struct appData *)app_data;
+	push_back(&appD->outData, err_msg, strlen(msg));
 	return EXIP_HANDLER_STOP;
 }
 
 static errorCode sample_startDocument(void *app_data)
 {
+	char msg[40];
 	struct appData *appD = (struct appData *)app_data;
 	if (appD->outputFormat == OUT_EXI)
-		printf("SD\n");
+		sprintf(msg, "SD\n");
 	else if (appD->outputFormat == OUT_XML)
-		printf("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+		sprintf(msg, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\0");
 
+	printf("%s", msg);
+	push_back(&appD->outData, msg, strlen(msg));
 	return EXIP_OK;
 }
 
 static errorCode sample_endDocument(void *app_data)
 {
+	char msg[4];
 	struct appData *appD = (struct appData *)app_data;
 	if (appD->outputFormat == OUT_EXI)
-		printf("ED\n");
+		sprintf(msg, "ED\n\0");
 	else if (appD->outputFormat == OUT_XML)
-		printf("\n");
+		sprintf(msg, "\n\0");
 
+	printf("%s", msg);
+	push_back(&appD->outData, msg, strlen(msg));
 	return EXIP_OK;
 }
 
 static errorCode sample_startElement(QName qname, void *app_data)
 {
+	char msg[300];
+	size_t msgIdx = 0;
 	struct appData *appD = (struct appData *)app_data;
 	if (appD->outputFormat == OUT_EXI)
 	{
 		printf("SE ");
+		sprintf(msg, "SE ");
+		msgIdx += 3;
 		printString(qname.uri);
+		sPrintString(msg + msgIdx, qname.uri);
+		msgIdx = strlen(msg);
 		printf(" ");
+		sprintf(msg + msgIdx, " ");
+		msgIdx++;
 		printString(qname.localName);
+		sPrintString(msg + msgIdx, qname.localName);
+		msgIdx = strlen(msg);
 		printf("\n");
+		sprintf(msg + msgIdx, "\n\0");
 	}
 	else if (appD->outputFormat == OUT_XML)
 	{
@@ -228,87 +337,147 @@ static errorCode sample_startElement(QName qname, void *app_data)
 			appD->nameBuf[qname.localName->length] = '\0';
 		}
 		push(&(appD->stack), createElement(appD->nameBuf));
-		if (appD->unclosedElement)
+		if (appD->unclosedElement) 
+		{
 			printf(">\n");
+			//sprintf(msg, ">\n");
+			//msgIdx++;
+			updateListLastAttribute(1, &(appD->outData), &">\n\0");
+		}
 		printf("<%s", appD->nameBuf);
+		sprintf(msg + msgIdx, "<%s", appD->nameBuf);
+		msgIdx += strlen(appD->nameBuf) + 1;
+
 
 		if (prxHit == 0)
 		{
 			sprintf(appD->nameBuf, " xmlns:p%d=\"", prefixIndex);
 			printf("%s", appD->nameBuf);
+			sprintf(msg + msgIdx, "%s", appD->nameBuf);
+			msgIdx += strlen(appD->nameBuf);
+
 			printString(qname.uri);
 			printf("\"");
+			sprintf(msg + msgIdx, "%.*s\"\0", qname.uri->length, qname.uri->str);
 		}
 
 		appD->unclosedElement = 1;
 	}
 
+	push_back(&appD->outData, msg, strlen(msg));
 	return EXIP_OK;
 }
 
 static errorCode sample_endElement(void *app_data)
 {
+	char msg[128];
+	size_t msgIdx = 0;
 	struct appData *appD = (struct appData *)app_data;
-	if (appD->outputFormat == OUT_EXI)
-		printf("EE\n");
+	if (appD->outputFormat == OUT_EXI) {
+		sprintf(msg, "EE\n\0");
+		printf("%s", msg);
+	}
 	else if (appD->outputFormat == OUT_XML)
 	{
 		struct element *el;
 
-		if (appD->unclosedElement)
+		if (appD->unclosedElement) 
+		{
 			printf(">\n");
+			//sprintf(msg, ">\n");
+			//msgIdx++;
+			updateListLastAttribute(1, &(appD->outData), &">\n\0");
+
+		}
 		appD->unclosedElement = 0;
 		el = pop(&(appD->stack));
 		printf("</%s>\n", el->name);
+		sprintf(msg + msgIdx, "</%s>\n\0", el->name);
 		destroyElement(el);
 	}
 
+	push_back(&appD->outData, msg, strlen(msg));
 	return EXIP_OK;
 }
 
 static errorCode sample_attribute(QName qname, void *app_data)
 {
+	char msg[128];
+	size_t msgIdx = 0;
 	struct appData *appD = (struct appData *)app_data;
 	if (appD->outputFormat == OUT_EXI)
 	{
 		printf("AT ");
+		sprintf(msg + msgIdx, "AT ");
+		msgIdx += 3;
 		printString(qname.uri);
+		sPrintString(msg + msgIdx, qname.uri);
+		msgIdx = strlen(msg);
 		printf(" ");
+		sprintf(msg + msgIdx, " ");
+		msgIdx++;
 		printString(qname.localName);
+		sPrintString(msg + msgIdx, qname.localName);
+		msgIdx = strlen(msg);
 		printf("=\"");
+		sprintf(msg + msgIdx, "=\"\0");
 	}
 	else if (appD->outputFormat == OUT_XML)
 	{
 		printf(" ");
+		sprintf(msg + msgIdx, " ");
+		msgIdx++;
 		if (!isStringEmpty(qname.uri))
 		{
 			printString(qname.uri);
+			sPrintString(msg + msgIdx, qname.uri);
+			msgIdx = strlen(msg);
 			printf(":");
+			sprintf(msg + msgIdx, ":");
+			msgIdx++;
 		}
 		printString(qname.localName);
+		sPrintString(msg + msgIdx, qname.localName);
+		msgIdx = strlen(msg);
 		printf("=\"");
+		sprintf(msg + msgIdx, "=\"\0");
 	}
 	appD->expectAttributeData = 1;
 
+	push_back(&appD->outData, msg, strlen(msg));
 	return EXIP_OK;
 }
 
 static errorCode sample_stringData(const String value, void *app_data)
 {
+	char msg[300];
+	size_t msgIdx = 0;
 	struct appData *appD = (struct appData *)app_data;
+	unsigned char isAttribute = appD->expectAttributeData;
+
 	if (appD->outputFormat == OUT_EXI)
 	{
 		if (appD->expectAttributeData)
 		{
 			printString(&value);
+			sPrintString(msg + msgIdx, &value);
+			msgIdx = strlen(msg);
 			printf("\"\n");
+			sprintf(msg + msgIdx, "\"\n");
+			msgIdx += 2;
 			appD->expectAttributeData = 0;
 		}
 		else
 		{
 			printf("CH ");
+			sprintf(msg + msgIdx, "CH ");
+			msgIdx += 3;
 			printString(&value);
+			sPrintString(msg + msgIdx, &value);
+			msgIdx = strlen(msg);
 			printf("\n");
+			sprintf(msg + msgIdx, "\n\0");
+			msgIdx ++;
 		}
 	}
 	else if (appD->outputFormat == OUT_XML)
@@ -316,17 +485,30 @@ static errorCode sample_stringData(const String value, void *app_data)
 		if (appD->expectAttributeData)
 		{
 			printString(&value);
+			sPrintString(msg + msgIdx, &value);
+			msgIdx = strlen(msg);
 			printf("\"");
+			sprintf(msg + msgIdx, "\"\0");
 			appD->expectAttributeData = 0;
 		}
 		else
 		{
 			if (appD->unclosedElement)
+			{
 				printf(">");
+				//sprintf(msg + msgIdx, ">");
+				//msgIdx++;
+				updateListLastAttribute(1, &(appD->outData), &">\0");
+			}
 			appD->unclosedElement = 0;
 			printString(&value);
+			sPrintString(msg + msgIdx, &value);
+			msgIdx = strlen(msg);
+			sprintf(msg + msgIdx, "\0");
 		}
 	}
+
+	updateListLastAttribute(isAttribute, &(appD->outData), msg);
 
 	return EXIP_OK;
 }
@@ -338,8 +520,12 @@ static errorCode sample_decimalData(Decimal value, void *app_data)
 
 static errorCode sample_intData(Integer int_val, void *app_data)
 {
+	char msg[33];
+	size_t msgIdx = 0;
 	struct appData *appD = (struct appData *)app_data;
+	unsigned char isAttribute = appD->expectAttributeData;
 	char tmp_buf[30];
+
 	if (appD->outputFormat == OUT_EXI)
 	{
 		if (appD->expectAttributeData)
@@ -347,6 +533,8 @@ static errorCode sample_intData(Integer int_val, void *app_data)
 			sprintf(tmp_buf, "%lld", (long long int)int_val);
 			printf("%s", tmp_buf);
 			printf("\"\n");
+			sprintf(msg + msgIdx, "%s\"\n\0", tmp_buf);
+			msgIdx = strlen(msg);
 			appD->expectAttributeData = 0;
 		}
 		else
@@ -355,6 +543,8 @@ static errorCode sample_intData(Integer int_val, void *app_data)
 			sprintf(tmp_buf, "%lld", (long long int)int_val);
 			printf("%s", tmp_buf);
 			printf("\n");
+			sprintf(msg + msgIdx, "CH %s\"\n\0", tmp_buf);
+			msgIdx = strlen(msg);
 		}
 	}
 	else if (appD->outputFormat == OUT_XML)
@@ -364,33 +554,54 @@ static errorCode sample_intData(Integer int_val, void *app_data)
 			sprintf(tmp_buf, "%lld", (long long int)int_val);
 			printf("%s", tmp_buf);
 			printf("\"");
+			sprintf(msg + msgIdx, "%s\"\0", tmp_buf);
+			msgIdx = strlen(msg);
 			appD->expectAttributeData = 0;
 		}
 		else
 		{
 			if (appD->unclosedElement)
+			{
 				printf(">");
+				//sprintf(msg + msgIdx, ">");
+				//msgIdx++;
+				updateListLastAttribute(1, &(appD->outData), &">\0");
+			}
 			appD->unclosedElement = 0;
 			sprintf(tmp_buf, "%lld", (long long int)int_val);
 			printf("%s", tmp_buf);
+			sprintf(msg + msgIdx, "%s\0", tmp_buf);
+			msgIdx = strlen(msg);
 		}
 	}
 
+	updateListLastAttribute(isAttribute, &(appD->outData), msg);
 	return EXIP_OK;
 }
 
 static errorCode sample_booleanData(boolean bool_val, void *app_data)
 {
+	char msg[11];
+	size_t msgIdx = 0;
 	struct appData *appD = (struct appData *)app_data;
+	unsigned char isAttribute = appD->expectAttributeData;
 
 	if (appD->outputFormat == OUT_EXI)
 	{
 		if (appD->expectAttributeData)
 		{
 			if (bool_val)
+			{
 				printf("true\"\n");
+				sprintf(msg + msgIdx, "true\"\n\0");
+				msgIdx += 7;
+			}
 			else
+			{
 				printf("false\"\n");
+				sprintf(msg + msgIdx, "false\"\n\0");
+				msgIdx += 8;
+			}
 
 			appD->expectAttributeData = 0;
 		}
@@ -398,9 +609,15 @@ static errorCode sample_booleanData(boolean bool_val, void *app_data)
 		{
 			printf("CH ");
 			if (bool_val)
+			{
 				printf("true\n");
+				sprintf(msg + msgIdx, "CH true\"\n\0");
+				msgIdx += 10;
+			}
 			else
 				printf("false\n");
+				sprintf(msg + msgIdx, "CH false\"\n\0");
+				msgIdx += 11;
 		}
 	}
 	else if (appD->outputFormat == OUT_XML)
@@ -408,31 +625,57 @@ static errorCode sample_booleanData(boolean bool_val, void *app_data)
 		if (appD->expectAttributeData)
 		{
 			if (bool_val)
+			{
 				printf("true\"");
+				sprintf(msg + msgIdx, "true\"\0");
+				msgIdx += 6;
+			}
 			else
+			{
 				printf("false\"");
+				sprintf(msg + msgIdx, "false\"\0");
+				msgIdx += 7;
+			}
 			appD->expectAttributeData = 0;
 		}
 		else
 		{
 			if (appD->unclosedElement)
+			{
 				printf(">");
+				//sprintf(msg + msgIdx, ">");
+				//msgIdx++;
+				updateListLastAttribute(1, &(appD->outData), &">\0");
+			}
 			appD->unclosedElement = 0;
 
 			if (bool_val)
+			{
 				printf("true");
+				sprintf(msg + msgIdx, "true\0");
+				msgIdx += 5;
+			}
 			else
+			{
 				printf("false");
+				sprintf(msg + msgIdx, "false\0");
+				msgIdx += 6;
+			}
 		}
 	}
 
+	updateListLastAttribute(isAttribute, &(appD->outData), msg);
 	return EXIP_OK;
 }
 
 static errorCode sample_floatData(Float fl_val, void *app_data)
 {
+	char msg[33];
+	size_t msgIdx = 0;
 	struct appData *appD = (struct appData *)app_data;
+	unsigned char isAttribute = appD->expectAttributeData;
 	char tmp_buf[30];
+
 	if (appD->outputFormat == OUT_EXI)
 	{
 		if (appD->expectAttributeData)
@@ -440,6 +683,8 @@ static errorCode sample_floatData(Float fl_val, void *app_data)
 			sprintf(tmp_buf, "%lldE%d", (long long int)fl_val.mantissa, fl_val.exponent);
 			printf("%s", tmp_buf);
 			printf("\"\n");
+			sprintf(msg + msgIdx, "%s\"\n\0", tmp_buf);
+			msgIdx = strlen(msg);
 			appD->expectAttributeData = 0;
 		}
 		else
@@ -448,6 +693,8 @@ static errorCode sample_floatData(Float fl_val, void *app_data)
 			sprintf(tmp_buf, "%lldE%d", (long long int)fl_val.mantissa, fl_val.exponent);
 			printf("%s", tmp_buf);
 			printf("\n");
+			sprintf(msg + msgIdx, "CH %s\n\0", tmp_buf);
+			msgIdx = strlen(msg);
 		}
 	}
 	else if (appD->outputFormat == OUT_XML)
@@ -457,24 +704,37 @@ static errorCode sample_floatData(Float fl_val, void *app_data)
 			sprintf(tmp_buf, "%lldE%d", (long long int)fl_val.mantissa, fl_val.exponent);
 			printf("%s", tmp_buf);
 			printf("\"");
+			sprintf(msg + msgIdx, "%s\"\0", tmp_buf);
+			msgIdx = strlen(msg);
 			appD->expectAttributeData = 0;
 		}
 		else
 		{
 			if (appD->unclosedElement)
+			{
 				printf(">");
+				//sprintf(msg + msgIdx, ">");
+				//msgIdx++;
+				updateListLastAttribute(1, &(appD->outData), &">\0");
+			}
 			appD->unclosedElement = 0;
 			sprintf(tmp_buf, "%lldE%d", (long long int)fl_val.mantissa, fl_val.exponent);
 			printf("%s", tmp_buf);
+			sprintf(msg + msgIdx, "%s\0", tmp_buf);
+			msgIdx = strlen(msg);
 		}
 	}
 
+	updateListLastAttribute(isAttribute, &(appD->outData), msg);
 	return EXIP_OK;
 }
 
 static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data)
 {
+	char msg[90];
+	size_t msgIdx = 0;
 	struct appData *appD = (struct appData *)app_data;
+	unsigned char isAttribute = appD->expectAttributeData;
 	char fsecBuf[30];
 	char tzBuf[30];
 	int i;
@@ -526,6 +786,12 @@ static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data)
 				   dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
 				   dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
 			printf("\"\n");
+			sprintf(msg + msgIdx, "%04d-%02d-%02dT%02d:%02d:%02d%s%s\"\n\0", 
+					dt_val.dateTime.tm_year + 1900,
+				   	dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
+				   	dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
+				   	dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
+			msgIdx = strlen(msg);
 			appD->expectAttributeData = 0;
 		}
 		else
@@ -536,6 +802,12 @@ static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data)
 				   dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
 				   dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
 			printf("\n");
+			sprintf(msg + msgIdx, "CH %04d-%02d-%02dT%02d:%02d:%02d%s%s\n\0", 
+					dt_val.dateTime.tm_year + 1900,
+				   	dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
+				   	dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
+				   	dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
+			msgIdx = strlen(msg);
 		}
 	}
 	else if (appD->outputFormat == OUT_XML)
@@ -547,26 +819,47 @@ static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data)
 				   dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
 				   dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
 			printf("\"");
+			sprintf(msg + msgIdx, "%04d-%02d-%02dT%02d:%02d:%02d%s%s\"\0", 
+					dt_val.dateTime.tm_year + 1900,
+				   	dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
+				   	dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
+				   	dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
+			msgIdx = strlen(msg);
 			appD->expectAttributeData = 0;
 		}
 		else
 		{
 			if (appD->unclosedElement)
+			{
 				printf(">");
+				//sprintf(msg + msgIdx, ">");
+				//msgIdx++;
+				updateListLastAttribute(1, &(appD->outData), &">\0");
+			}
 			appD->unclosedElement = 0;
 			printf("%04d-%02d-%02dT%02d:%02d:%02d%s%s", dt_val.dateTime.tm_year + 1900,
 				   dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
 				   dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
 				   dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
+			sprintf(msg + msgIdx, "%04d-%02d-%02dT%02d:%02d:%02d%s%s\0", 
+					dt_val.dateTime.tm_year + 1900,
+				   	dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
+				   	dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
+				   	dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
+			msgIdx = strlen(msg);
 		}
 	}
 
+	updateListLastAttribute(isAttribute, &(appD->outData), msg);
 	return EXIP_OK;
 }
 
 static errorCode sample_binaryData(const char *binary_val, Index nbytes, void *app_data)
 {
+	char msg[30];
+	size_t msgIdx = 0;
 	struct appData *appD = (struct appData *)app_data;
+	unsigned char isAttribute = appD->expectAttributeData;
 
 	if (appD->outputFormat == OUT_EXI)
 	{
@@ -574,6 +867,8 @@ static errorCode sample_binaryData(const char *binary_val, Index nbytes, void *a
 		{
 			printf("[binary: %d bytes]", (int)nbytes);
 			printf("\"\n");
+			sprintf(msg + msgIdx, "[binary: %d bytes]\"\n\0", (int)nbytes);
+			msgIdx = strlen(msg);
 			appD->expectAttributeData = 0;
 		}
 		else
@@ -581,6 +876,8 @@ static errorCode sample_binaryData(const char *binary_val, Index nbytes, void *a
 			printf("CH ");
 			printf("[binary: %d bytes]", (int)nbytes);
 			printf("\n");
+			sprintf(msg + msgIdx, "CH [binary: %d bytes]\n\0", (int)nbytes);
+			msgIdx = strlen(msg);
 		}
 	}
 	else if (appD->outputFormat == OUT_XML)
@@ -589,40 +886,70 @@ static errorCode sample_binaryData(const char *binary_val, Index nbytes, void *a
 		{
 			printf("[binary: %d bytes]", (int)nbytes);
 			printf("\"");
+			sprintf(msg + msgIdx, "[binary: %d bytes]\"\0", (int)nbytes);
+			msgIdx = strlen(msg);
 			appD->expectAttributeData = 0;
 		}
 		else
 		{
 			if (appD->unclosedElement)
+			{
 				printf(">");
+				//sprintf(msg + msgIdx, ">");
+				//msgIdx++;
+				updateListLastAttribute(1, &(appD->outData), &">\0");
+			}
 			appD->unclosedElement = 0;
 			printf("[binary: %d bytes]", (int)nbytes);
+			sprintf(msg + msgIdx, "[binary: %d bytes]\0", (int)nbytes);
+			msgIdx = strlen(msg);
 		}
 	}
 
+	updateListLastAttribute(isAttribute, &(appD->outData), msg);
 	return EXIP_OK;
 }
 
 static errorCode sample_qnameData(const QName qname, void *app_data)
 {
+	char msg[128];
+	size_t msgIdx = 0;
 	struct appData *appD = (struct appData *)app_data;
+	unsigned char isAttribute = appD->expectAttributeData;
+
 	if (appD->outputFormat == OUT_EXI)
 	{
 		if (appD->expectAttributeData)
 		{
 			printString(qname.uri);
+			sPrintString(msg + msgIdx, qname.uri);
+			msgIdx = strlen(msg);
 			printf(":");
+			sprintf(msg + msgIdx, ":");
+			msgIdx++;
 			printString(qname.localName);
+			sPrintString(msg + msgIdx, qname.localName);
+			msgIdx = strlen(msg);
 			printf("\"\n");
+			sprintf(msg + msgIdx, "\"\n\0");
 			appD->expectAttributeData = 0;
 		}
 		else
 		{
 			printf("QNAME ");
+			sprintf(msg + msgIdx, "QNAME ");
+			msgIdx += 6;
 			printString(qname.uri);
+			sPrintString(msg + msgIdx, qname.uri);
+			msgIdx = strlen(msg);
 			printf(":");
+			sprintf(msg + msgIdx, ":");
+			msgIdx++;
 			printString(qname.localName);
+			sPrintString(msg + msgIdx, qname.localName);
+			msgIdx = strlen(msg);
 			printf("\n");
+			sprintf(msg + msgIdx, "\n\0");
 		}
 	}
 	else if (appD->outputFormat == OUT_XML)
@@ -630,22 +957,41 @@ static errorCode sample_qnameData(const QName qname, void *app_data)
 		if (appD->expectAttributeData)
 		{
 			printString(qname.uri);
+			sPrintString(msg + msgIdx, qname.uri);
+			msgIdx = strlen(msg);
 			printf(":");
+			sprintf(msg + msgIdx, ":");
+			msgIdx++;
 			printString(qname.localName);
+			sPrintString(msg + msgIdx, qname.localName);
+			msgIdx = strlen(msg);
 			printf("\"");
+			sprintf(msg + msgIdx, "\"\0");
 			appD->expectAttributeData = 0;
 		}
 		else
 		{
 			if (appD->unclosedElement)
+			{
 				printf(">");
+				//sprintf(msg + msgIdx, ">");
+				//msgIdx++;
+				updateListLastAttribute(1, &(appD->outData), &">\0");
+			}
 			appD->unclosedElement = 0;
 			printString(qname.uri);
+			sPrintString(msg + msgIdx, qname.uri);
+			msgIdx = strlen(msg);
 			printf(":");
+			sprintf(msg + msgIdx, ":");
+			msgIdx++;
 			printString(qname.localName);
+			sPrintString(msg + msgIdx, qname.localName);
+			msgIdx = strlen(msg);
 		}
 	}
 
+	updateListLastAttribute(isAttribute, &(appD->outData), msg);
 	return EXIP_OK;
 }
 
