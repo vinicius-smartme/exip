@@ -54,14 +54,6 @@
             "stopAtEntry": false,
             "filterStdout": false,
             "MIMode": "gdb",
-            /*"customLaunchSetupCommands": [
-                {
-                    "text": "target-run",
-                    "description": "run target",
-                    "ignoreFailures": false
-                }
-            ],*/
-            //"launchCompleteCommand": "exec-run",
             "setupCommands": [
                 {
                     "description": "gdb",
@@ -74,6 +66,7 @@
                 "type": "cppdbg",
                 "request": "launch",
                 "program": "${workspaceFolder}/bin/examples/exipdb",
+                "args": ["-exi", "exipd-test.exi"],
                 "miDebuggerPath": "/usr/bin/gdb"
             },
             "windows": {
@@ -81,11 +74,80 @@
                 "type": "cppdbg",
                 "request": "launch",
                 "program": "${workspaceFolder}\\bin\\examples\\exipdb.exe",
-                "args": ["-exi", "-schema=exipd-test-schema-xsd.exi", "exipd-test-schema.exi"],
+                //"args": ["-exi", "-schema=exipd-test-schema-xsd.exi", "exipd-test-schema.exi"],
+                "args": ["-exi", "exipd-test.exi"],
                 "miDebuggerPath": "C:\\Strawberry\\c\\bin\\gdb.exe",
                 "targetArchitecture": "x86",
             },
             "cwd": "${workspaceFolder}\\bin\\examples\\"
+        },
+        {
+            "name": "Debug EXIP Encode",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/examples/exipe.exe",
+            "stopAtEntry": false,
+            "externalConsole": false,
+            "filterStdout": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "linux": {
+                "name": "Debug C Main - Linux",
+                "type": "cppdbg",
+                "request": "launch",
+                "program": "${workspaceFolder}/bin/examples/exipe",
+                // "args": ["-schema=notebook.xsd", "notebook.xml", "notebook.exi"],
+                "args": ["notebook.exi"],
+                "miDebuggerPath": "/usr/bin/gdb"
+            },
+            "windows": {
+                "name": "Debug C Main - Win",
+                "type": "cppdbg",
+                "request": "launch",
+                "program": "${workspaceFolder}\\bin\\examples\\exipe.exe",
+                "args": ["-exi", "-schema=exipe-test-types-xsd.exi,exipe-test-neseted-xsd.exi", "exipe-test-schema.exi"],
+                "miDebuggerPath": "C:\\Strawberry\\c\\bin\\gdb.exe",
+                "targetArchitecture": "x86",
+            },
+            "cwd": "${workspaceFolder}\\bin\\examples\\"
+        },
+        {
+            "name": "Debug Lib Test",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/lib_test/main.exe",
+            "stopAtEntry": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "linux": {
+                "name": "Debug C Main - Linux",
+                "type": "cppdbg",
+                "request": "launch",
+                "program": "${workspaceFolder}/lib_test/main",
+                "miDebuggerPath": "/usr/bin/gdb"
+            },
+            "windows": {
+                "name": "Debug C Main - Win",
+                "type": "cppdbg",
+                "request": "launch",
+                "program": "${workspaceFolder}\\lib_test\\main.exe",
+                "args": ["-exi", "-schema=exipd-test-schema-xsd.exi", "exipd-test-schema.exi"],
+                "miDebuggerPath": "C:\\Strawberry\\c\\bin\\gdb.exe",
+                "targetArchitecture": "x86",
+            },
+            "cwd": "${workspaceFolder}\\lib_test"
         },
     ]
 }
