@@ -42,8 +42,11 @@ struct EXISerializer
 	errorCode (*qnameData)(EXIStream* strm, QName qname); // xsi:type value only
 
 	// Miscellaneous
-	errorCode (*processingInstruction)(EXIStream* strm); // TODO: define the parameters!
+	errorCode (*processingInstruction)(EXIStream* strm, const String name, const String text);
+	errorCode (*comment)(EXIStream* strm, const String comment);
 	errorCode (*namespaceDeclaration)(EXIStream* strm, const String ns, const String prefix, boolean isLocalElementNS);
+	errorCode (*docType)(EXIStream* strm, boolean public, const String system, const String text);
+	errorCode (*entityReference)(EXIStream* strm, const String reference);
 
 	// EXI specific
 	errorCode (*exiHeader)(EXIStream* strm);
@@ -225,6 +228,15 @@ errorCode qnameData(EXIStream* strm, QName qname);
 errorCode processingInstruction(EXIStream* strm);
 
 /**
+ * @brief Encode a comment
+ * 
+ * @param strm EXI stream object
+ * @param comment the comment to be encoded
+ * @return errorCode 
+ */
+errorCode comment(EXIStream* strm, const String comment);
+
+/**
  * @brief Encode a namespace declaration when Preserve.prefixes == TRUE
  *
  * @param[in, out] strm EXI stream object
@@ -235,6 +247,26 @@ errorCode processingInstruction(EXIStream* strm);
  * @return Error handling code
  */
 errorCode namespaceDeclaration(EXIStream* strm, const String ns, const String prefix, boolean isLocalElementNS);
+
+/**
+ * @brief Encode a DOCTYPE
+ * 
+ * @param strm EXI stream object
+ * @param public The public "DTD_name"
+ * @param system The system/"DTD_location"
+ * @param text Doctype text content as a String
+ * @return errorCode 
+ */
+errorCode docType(EXIStream* strm, String public, const String system, const String text);
+
+/**
+ * @brief Encode a entity reference
+ * 
+ * @param strm EXI stream object
+ * @param reference reference to be encoded
+ * @return errorCode 
+ */
+errorCode entityReference(EXIStream* strm, const String reference);
 
 // EXI specific
 

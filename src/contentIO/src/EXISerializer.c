@@ -28,6 +28,9 @@
 #include "ioUtil.h"
 #include "streamEncode.h"
 
+#define ASCII_0 0x30
+#define ASCII_9 0x39
+#define ASCII_DOT 0x2e
 /**
  * The handler to be used by the applications to serialize EXI streams
  */
@@ -46,8 +49,11 @@ const EXISerializer serialize ={startDocument,
 								listData,
 								qnameData,
 								processingInstruction,
+								comment,
 								namespaceDeclaration,
-								encodeHeader,
+								docType,
+								entityReference,
+								encodeHeader, /*exiHeader*/
 								selfContained,
 								initHeader,
 								initStream,
@@ -927,6 +933,11 @@ errorCode processingInstruction(EXIStream* strm)
 	return EXIP_NOT_IMPLEMENTED_YET;
 }
 
+errorCode comment(EXIStream* strm, const String comment)
+{
+	return EXIP_NOT_IMPLEMENTED_YET;
+}
+
 errorCode namespaceDeclaration(EXIStream* strm, const String ns, const String prefix, boolean isLocalElementNS)
 {
 	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
@@ -991,6 +1002,16 @@ errorCode namespaceDeclaration(EXIStream* strm, const String ns, const String pr
 	return encodeBoolean(strm, isLocalElementNS);
 }
 
+errorCode docType(EXIStream* strm, String public, const String system, const String text)
+{
+	return EXIP_NOT_IMPLEMENTED_YET;
+}
+
+errorCode entityReference(EXIStream* strm, const String reference)
+{
+	return EXIP_NOT_IMPLEMENTED_YET;
+}
+
 errorCode selfContained(EXIStream* strm)
 {
 	return EXIP_NOT_IMPLEMENTED_YET;
@@ -1007,7 +1028,7 @@ errorCode closeEXIStream(EXIStream* strm)
 
 	// Flush the buffer first if there is an output Stream
 	Index numBytesWritten = 0;
-	errorCode error = doReadWriteToStream(&(strm->buffer), 0, strm->context.bufferIndx + 1, FALSE, &numBytesWritten);
+	doReadWriteToStream(&(strm->buffer), 0, strm->context.bufferIndx + 1, FALSE, &numBytesWritten);
 	if(numBytesWritten < strm->context.bufferIndx + 1) {
 		tmp_err_code = EXIP_BUFFER_END_REACHED;
 	}
