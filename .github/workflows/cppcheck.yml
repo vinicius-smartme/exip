@@ -37,11 +37,12 @@ jobs:
       # Archive cppcheck results
       - name: Prepare cppcheck results
         run: |
-          cd ~/work/mithral-hall-application/mithral-hall-application
+          REPORT_PATH=$(find . -name 'cppcheck_report.txt' -exec dirname {} \;)
+          cd REPORT_PATH
           mv cppcheck_report.txt cppcheck_report.xml
       # ===============================================================================================
       - name: Archive cppcheck results
         uses: actions/upload-artifact@v1
         with:
           name: cppcheck-report
-          path: cppcheck_report.xml
+          path: $REPORT_PATH/cppcheck_report.xml

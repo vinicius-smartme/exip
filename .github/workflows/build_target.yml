@@ -9,7 +9,7 @@ jobs:
 # =============================================================================================================
   linux_build_arm7:
     name: Linux build Arm7 (target)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       # ===============================================================================================
       # Environment Setup
@@ -38,7 +38,8 @@ jobs:
       # ===============================================================================================
       - name: Install dependencies
         run: |
-          sudo apt-get -y install gcc-arm-linux-gnueabihf gcc-multilib-arm-linux-gnueabihf
+          sudo apt-get -y install gcc-arm-linux-gnueabihf
+          sudo apt-get -y install gcc-multilib-arm-linux-gnueabihf
           sudo apt-get -y --allow-remove-essential install libgcc-s1:armhf libc6:armhf check:armhf
       # sudo apt-get -y install libnl-3-200:armhf libnl-3-dev:armhf libnl-genl-3-200:armhf libnl-genl-3-dev:armhf
       # sudo apt-get -y install lm-sensors:armhf libsensors4-dev:armhf libsensors5:armhf
