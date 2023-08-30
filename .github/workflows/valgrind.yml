@@ -1,4 +1,4 @@
-name: Static_analysis
+name: Memory_analysis
 
 on: [push, workflow_dispatch]
 
@@ -8,7 +8,7 @@ env:
 jobs:
 # =============================================================================================================
   build_cppcheck:
-    name: Build Cpp Check
+    name: Valgrind analysis
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo

@@ -1,4 +1,4 @@
-name: EXIP CI WINDOWS
+name: Windows_host
 
 on: [push, workflow_dispatch]
 
@@ -20,5 +20,4 @@ jobs:
       # ===============================================================================================
       - name: Build
         run: |
-          cd build/gcc
           make all
