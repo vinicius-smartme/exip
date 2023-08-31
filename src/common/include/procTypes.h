@@ -19,19 +19,12 @@
 #define PROCTYPES_H_
 
 #include "errorHandle.h"
-#include <stdint.h>
+#include "EXIOptions.h"
+#include "EXIPrimitives.h"
+#include "schemaIdMode.h"
 #include <time.h>
-#include <string.h>
 #include "exipConfig.h"
 #include <limits.h>
-
-enum boolean
-{
-	FALSE = 0,
-	TRUE  = 1
-};
-
-typedef enum boolean boolean;
 
 #ifndef NULL
 #define NULL ((void *)0)
@@ -85,31 +78,6 @@ typedef struct stackNode GenericStack;
 #define SET_SELF_CONTAINED(p)         ((p) = (p) | SELF_CONTAINED)
 
 /**@}*/
-
-/**
- * @name Handling of SchemaID header field
- *
- * SchemaID option modes:
- * @def SCHEMA_ID_ABSENT
- * 		default,  no statement is made about the schema information
- * @def SCHEMA_ID_SET
- * 		some sting identification of the schema is given
- * @def SCHEMA_ID_NIL
- * 		no schema information is used for processing the EXI body (i.e. a schema-less EXI stream)
- * @def SCHEMA_ID_EMPTY
- * 		no user defined schema information is used for processing the EXI body; however, the built-in XML schema types are available for use in the EXI body
- *
- * @see http://www.w3.org/TR/2011/REC-exi-20110310/#key-schemaIdOption
- */
-enum SchemaIdMode
-{
-	SCHEMA_ID_ABSENT = 0,
-	SCHEMA_ID_SET    = 1,
-	SCHEMA_ID_NIL    = 2,
-	SCHEMA_ID_EMPTY  = 3
-};
-
-typedef enum SchemaIdMode SchemaIdMode;
 
 /**
  *	@name Fidelity options handling
@@ -214,114 +182,6 @@ typedef struct EXIPDateTime EXIPDateTime;
 #define IS_PRESENT(p, mask) (((p) & (mask)) != 0)
 /**@}*/
 
-#ifndef EXIP_UNSIGNED_INTEGER
-# define EXIP_UNSIGNED_INTEGER uint64_t
-#endif
-
-typedef EXIP_UNSIGNED_INTEGER UnsignedInteger;
-
-#ifndef EXIP_INTEGER
-# define EXIP_INTEGER int64_t
-#endif
-
-typedef EXIP_INTEGER Integer;
-
-/**
- * Represents base 10 (decimal) floating-point data.
- * The default Float representation in EXIP.
- * Maps directly to the EXI Float datatype.
- * Used for float and decimal data.
- *
- * @see http://www.w3.org/TR/2011/REC-exi-20110310/#encodingFloat
- */
-struct EXIFloat
-{
-	int64_t mantissa;
-	int16_t exponent;
-};
-
-#ifndef EXIP_FLOAT
-# define EXIP_FLOAT struct EXIFloat
-#endif
-
-typedef EXIP_FLOAT Float;
-
-/**
- * Used for the content handler interface for decimal values.
- * Application which require support for different type of decimal
- * representation (IEEE 754 or ISO/IEC/IEEE 60559:2011 standards) can
- * override this macro and re-define the decimal encoding/decoding
- * functions (not recommended). Instead:
- * On platforms supporting decimal floating types the conversion
- * between EXIP_FLOAT and _Decimal64 or _Decimal128 should be done
- * in the application code.
- *
- * @see http://gcc.gnu.org/onlinedocs/gcc/Decimal-Float.html#Decimal-Float
- * @see http://speleotrove.com/decimal/
- */
-#ifndef EXIP_DECIMAL
-# define EXIP_DECIMAL Float
-#endif
-
-typedef EXIP_DECIMAL Decimal;
-
-#ifndef EXIP_INDEX
-# define EXIP_INDEX size_t
-#endif
-
-typedef EXIP_INDEX Index;
-
-#ifndef EXIP_INDEX_MAX
-# define EXIP_INDEX_MAX SIZE_MAX
-#endif
-
-#define INDEX_MAX EXIP_INDEX_MAX
-
-#ifndef EXIP_SMALL_INDEX
-# define EXIP_SMALL_INDEX size_t
-#endif
-
-typedef EXIP_SMALL_INDEX SmallIndex;
-
-#ifndef EXIP_SMALL_INDEX_MAX
-# define EXIP_SMALL_INDEX_MAX SIZE_MAX
-#endif
-
-#define SMALL_INDEX_MAX EXIP_SMALL_INDEX_MAX
-
-#ifndef EXIP_IMPLICIT_DATA_TYPE_CONVERSION
-# define EXIP_IMPLICIT_DATA_TYPE_CONVERSION ON
-#endif
-
-/**
- * Defines the encoding used for characters.
- * It is dependent on the implementation of the stringManipulate.h functions
- * The default is ASCII characters (ASCII_stringManipulate.c)
- */
-#ifndef CHAR_TYPE
-# define CHAR_TYPE char
-#endif
-
-typedef CHAR_TYPE CharType;
-
-
-#ifndef EXIP_STRTOLL
-/** strtoll() function */
-# define EXIP_STRTOLL strtoll
-#endif
-
-/**
- * Represents the length prefixed strings in EXIP
- */
-struct StringType
-{
-	CharType* str;
-	Index length;
-};
-
-typedef struct StringType String;
-
-#define EMPTY_STRING (String){.str = NULL, .length = 0}
 
 /**
  * Represent a fully qualified name
@@ -1168,71 +1028,6 @@ struct ioStream
 };
 
 typedef struct ioStream IOStream;
-
-struct DatatypeRepresentationMap
-{
-	void* TODO; //TODO: fill in the information for this structure
-};
-
-typedef struct DatatypeRepresentationMap DatatypeRepresentationMap;
-
-struct EXIOptions
-{
-	/**
-	 * Use the macros GET_ALIGNMENT(p), WITH_COMPRESSION(p), WITH_STRICT,
-	 * WITH_FRAGMENT(p), WITH_SELF_CONTAINED(p) to extract the options:
-	 * alignment, compression, strict, fragment and selfContained
-	 *
-	 * @see options_defs
-	 */
-	unsigned char enumOpt;
-
-	/**
-	 * Specifies whether comments, pis, etc. are preserved - bit mask of booleans
-	 * Use IS_PRESERVED macro to retrieve the values different preserve options
-	 */
-	unsigned char preserve;
-
-	/** schemaID mode, default SCHEMA_ID_ABSENT */
-	SchemaIdMode schemaIDMode;
-
-	/**
-	 * Identify the schema information, if any, used to encode the body.
-	 * It the schemaID field is absent or empty, then schemaID is
-	 * an empty string. Use schemaIDMode to check/set the exact schemaID mode
-	 * of operation
-	 */
-	String schemaID;
-
-	/**
-	 * Specify alternate datatype representations for typed values in the EXI body
-	 */
-	DatatypeRepresentationMap* drMap;
-
-	/**
-	 *  Specifies the block size used for EXI compression
-	 */
-	uint32_t blockSize;
-
-	/**
-	 * Specifies the maximum string length of value content items to be considered for addition to the string table.
-	 * INDEX_MAX - unbounded
-	 */
-	Index valueMaxLength;
-
-	/**
-	 * Specifies the total capacity of value partitions in a string table
-	 * INDEX_MAX - unbounded
-	 */
-	Index valuePartitionCapacity;
-
-	/**
-	 * User defined meta-data may be added
-	 */
-	void* user_defined_data;
-};
-
-typedef struct EXIOptions EXIOptions;
 
 /**
  * Represents an EXI header
