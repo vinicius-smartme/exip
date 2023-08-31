@@ -1,5 +1,5 @@
 #include "decode.h"
-#include "single_linked_list.h"
+#include "singleLinkedList.h"
 #include "exipConfig.h"
 
 #define BUFFER_LEN 1024
@@ -15,8 +15,8 @@ int main () {
     char buf[BUFFER_LEN];
     FILE *infile;
     size_t inFileSize;
-    List output_file = new_list();
-    List output_buffer = new_list();
+    List output_file = newList();
+    List output_buffer = newList();
     
     printf("\n ------------------- Decode from file ------------------- \n");
     infile = fopen(exi_path, "rb" );
@@ -26,11 +26,11 @@ int main () {
         exit(1);
     }
 
-    decode_from_file(schema_path, outFlag, outOfBandOpts, opts, (void *)infile, &output_file);
+    decodeFromFile(schema_path, outFlag, outOfBandOpts, opts, (void *)infile, &output_file);
     fclose(infile);
     printf("\n ------------------- List: \n");
-    print_list(&output_file);
-    delete_list(&output_file);
+    printList(&output_file);
+    deleteList(&output_file);
 
     printf("\n ------------------- Decode from buffer ------------------- \n");
     infile = fopen(exi_path, "rb" );
@@ -50,21 +50,21 @@ int main () {
     printf("Read %d(Buffer size: %d)\n", inFileSize, BUFFER_LEN);
     fclose(infile);
 
-    decode_from_buffer(schema_path, outFlag, outOfBandOpts, opts, (void *)buf, inFileSize, &output_buffer);
+    decodeFromBuffer(schema_path, outFlag, outOfBandOpts, opts, (void *)buf, inFileSize, &output_buffer);
     printf("\n ------------------- List: \n");
-    print_list(&output_buffer);
-    //delete_list(&output_buffer);
+    printList(&output_buffer);
+    //deleteList(&output_buffer);
 
     printf("\n ------------------- Encode from buffer ------------------- \n");
 
-    output_file = new_list();
+    output_file = newList();
     memset(buf, 0, BUFFER_LEN);
-    encode_from_buffer(schema_path, outFlag, outOfBandOpts, opts, &output_buffer, output_buffer.size, buf, BUFFER_LEN);
+    encodeFromBuffer(schema_path, outFlag, outOfBandOpts, opts, &output_buffer, output_buffer.size, buf, BUFFER_LEN);
     printf("\n ------------------- List: \n");
-    print_list(&output_file);
-    delete_list(&output_file);
+    printList(&output_file);
+    deleteList(&output_file);
 
-    delete_list(&output_buffer);
+    deleteList(&output_buffer);
 
     return 0;
 }

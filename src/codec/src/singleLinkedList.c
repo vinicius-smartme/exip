@@ -10,16 +10,16 @@
  * @brief Decode and encode utility functions.
  */
 
-#include "single_linked_list.h"
+#include "singleLinkedList.h"
 #include "grammarGenerator.h"
 
-List new_list()
+List newList()
 {
     List list = {.head = NULL, .tail = NULL, .size = 0};
     return list;
 }
 
-void push_back(List *list, void *data, size_t size)
+void pushBack(List *list, void *data, size_t size)
 {
     Node *node = (Node *)calloc(1, sizeof(Node));
     node->data = calloc(1, size + 1);
@@ -41,7 +41,7 @@ void push_back(List *list, void *data, size_t size)
     list->size++;
 }
 
-Node *pop_front(List *list)
+Node *popFront(List *list)
 {
     if (list->head == NULL)
     {
@@ -62,10 +62,10 @@ Node *pop_front(List *list)
 
 Node *pop_back(List *list)
 {
-    return pop_at(list, list->size - 1);
+    return popAt(list, list->size - 1);
 }
 
-Node *pop_at(List *list, int index)
+Node *popAt(List *list, int index)
 {
     if (index < 0 || index >= list->size)
     {
@@ -76,7 +76,7 @@ Node *pop_at(List *list, int index)
 
     if (index == 0)
     {
-        return pop_front(list);
+        return popFront(list);
     }
 
     Node *prev = list->head;
@@ -124,7 +124,7 @@ Node *getNth(List *list, int index)
     }
 }
 
-void print_list(List *list)
+void printList(List *list)
 {
     Node *node = list->head;
     printf("[");
@@ -140,7 +140,7 @@ void print_list(List *list)
     printf("]\n");
 }
 
-void clear_node(Node *node)
+void clearNode(Node *node)
 {
     if (node != NULL)
         free(node->data);
@@ -148,7 +148,7 @@ void clear_node(Node *node)
     node->size = 0;
 }
 
-void delete_list(List *list)
+void deleteList(List *list)
 {
     Node *node = list->head;
     while (node != NULL)
@@ -163,7 +163,7 @@ void delete_list(List *list)
     list->size = 0;
 }
 
-List *copy_list(List *list)
+List *copyList(List *list)
 {
     List *new_list = malloc(sizeof(List));
     if (!new_list)
@@ -179,7 +179,7 @@ List *copy_list(List *list)
         Node *new_node = malloc(sizeof(Node));
         if (!new_node)
         {
-            delete_list(new_list);
+            deleteList(new_list);
             return NULL;
         }
         new_node->size = current->size;
@@ -187,7 +187,7 @@ List *copy_list(List *list)
         if (!new_node->data)
         {
             free(new_node);
-            delete_list(new_list);
+            deleteList(new_list);
             return NULL;
         }
         memcpy(new_node->data, current->data, current->size);

@@ -15,13 +15,13 @@
 
 #include "EXIOptions.h"
 #include "EXIPrimitives.h"
-#include "single_linked_list.h"
+#include "singleLinkedList.h"
 #include "errorHandle.h"
 
 #define IN_EXI 0
 #define IN_XML 1
 
-errorCode encode_from_file(
+errorCode encodeFromFile(
     const char *schemaPath, 
 	unsigned char outFlag, 
 	boolean hasOptions,  
@@ -29,7 +29,7 @@ errorCode encode_from_file(
 	void *inStreamPath, 
 	List *outData);
 
-errorCode encode_from_buffer(
+errorCode encodeFromBuffer(
     const char *schemaPath,
 	unsigned char outFlag, 
 	boolean hasOptions, 

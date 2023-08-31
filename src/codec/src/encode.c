@@ -152,7 +152,7 @@ errorCode read_startElement(unsigned char inFlag, const char *data, List *elemen
 		}
 
 		// This entry will be verified when ending the element
-		push_back(elementList, localName->str, localName->length);
+		pushBack(elementList, localName->str, localName->length);
 	}
 	else 
 		return EXIP_INVALID_INPUT;
@@ -175,12 +175,12 @@ errorCode read_endElement(unsigned char inFlag, const char *data, List *elementL
 			// Verifies if the ending the element matches the one in the list
 			entry = pop_back(elementList);
 			if (strstr(entry->data, strPtr) != NULL) {
-				clear_node(entry);
+				clearNode(entry);
 				return EXIP_OK;
 			}
 			else
 			{
-				clear_node(entry);
+				clearNode(entry);
 				return EXIP_INVALID_EVENT;
 			}
 		    
@@ -368,7 +368,7 @@ static errorCode encode(
 	EXITypeClass valueType;
 	size_t listIdx = 0;
 	Node *entry;
-	List elementList = new_list();	// Used to verify that an xml element starts and ends
+	List elementList = newList();	// Used to verify that an xml element starts and ends
 
 	buffer.buf = buf;
 	buffer.bufLen = OUTPUT_BUFFER_SIZE;
@@ -665,7 +665,7 @@ static errorCode encode(
 	return tmp_err_code;*/
 }
 
-errorCode encode_from_file(
+errorCode encodeFromFile(
     const char *schemaPath, 
 	unsigned char outFlag, 
 	boolean hasOptions,  
@@ -681,7 +681,7 @@ errorCode encode_from_file(
 	return 0;
 }
 
-errorCode encode_from_buffer(
+errorCode encodeFromBuffer(
     const char *schemaPath,
 	unsigned char outFlag, 
 	boolean hasOptions, 

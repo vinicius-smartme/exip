@@ -113,7 +113,7 @@ static errorCode decode(
 	parsingData.unclosedElement = 0;
 	parsingData.prefixesCount = 0;
 	parsingData.outputFormat = outFlag;
-	parsingData.outData = new_list();
+	parsingData.outData = newList();
 	if (outOfBandOpts && opts != NULL)
 		testParser.strm.header.opts = *opts;
 
@@ -168,14 +168,14 @@ static errorCode decode(
 		return tmp_err_code;
 }
 
-// errorCode decode_from_file(
+// errorCode decodeFromFile(
 // 	EXIPSchema *schemaPtr, 
 // 	unsigned char outFlag, 
 // 	boolean outOfBandOpts, 
 // 	EXIOptions *opts,
 // 	void *inStreamPath, 
 // 	List *outData)
-errorCode decode_from_file(
+errorCode decodeFromFile(
 	const char *schemaPath, 
 	unsigned char outFlag, 
 	boolean hasOptions, 
@@ -200,7 +200,7 @@ errorCode decode_from_file(
 		outData);
 }
 
-errorCode decode_from_buffer(
+errorCode decodeFromBuffer(
 	const char *schemaPath, 
 	unsigned char outFlag, 
 	boolean hasOptions, 
@@ -267,7 +267,7 @@ static void updateListLastAttribute(unsigned char isAttribute, List *list, char 
 	}
 	else
 	{
-		push_back(list, (void *)msg, strlen(msg));
+		pushBack(list, (void *)msg, strlen(msg));
 	}
 }
 static errorCode sample_fatalError(const errorCode code, const char *msg, void *app_data)
@@ -276,7 +276,7 @@ static errorCode sample_fatalError(const errorCode code, const char *msg, void *
 	sprintf(err_msg, "\n%d : FATAL ERROR: %s\n\0", code, msg);
 	printf("%s", err_msg);
 	struct appData *appD = (struct appData *)app_data;
-	push_back(&appD->outData, err_msg, strlen(msg));
+	pushBack(&appD->outData, err_msg, strlen(msg));
 	return EXIP_HANDLER_STOP;
 }
 
@@ -290,7 +290,7 @@ static errorCode sample_startDocument(void *app_data)
 		sprintf(msg, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\0");
 
 	printf("%s", msg);
-	push_back(&appD->outData, msg, strlen(msg));
+	pushBack(&appD->outData, msg, strlen(msg));
 	return EXIP_OK;
 }
 
@@ -304,7 +304,7 @@ static errorCode sample_endDocument(void *app_data)
 		sprintf(msg, "\n\0");
 
 	printf("%s", msg);
-	push_back(&appD->outData, msg, strlen(msg));
+	pushBack(&appD->outData, msg, strlen(msg));
 	return EXIP_OK;
 }
 
@@ -381,7 +381,7 @@ static errorCode sample_startElement(QName qname, void *app_data)
 		appD->unclosedElement = 1;
 	}
 
-	push_back(&appD->outData, msg, strlen(msg));
+	pushBack(&appD->outData, msg, strlen(msg));
 	return EXIP_OK;
 }
 
@@ -413,7 +413,7 @@ static errorCode sample_endElement(void *app_data)
 		destroyElement(el);
 	}
 
-	push_back(&appD->outData, msg, strlen(msg));
+	pushBack(&appD->outData, msg, strlen(msg));
 	return EXIP_OK;
 }
 
@@ -461,7 +461,7 @@ static errorCode sample_attribute(QName qname, void *app_data)
 	}
 	appD->expectAttributeData = 1;
 
-	push_back(&appD->outData, msg, strlen(msg));
+	pushBack(&appD->outData, msg, strlen(msg));
 	return EXIP_OK;
 }
 

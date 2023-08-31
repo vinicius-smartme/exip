@@ -15,13 +15,13 @@
 
 #include "EXIOptions.h"
 #include "EXIPrimitives.h"
-#include "single_linked_list.h"
+#include "singleLinkedList.h"
 #include "errorHandle.h"
 
 #define OUT_EXI 0
 #define OUT_XML 1
 
-errorCode decode_from_file(
+errorCode decodeFromFile(
 	const char *schemaPath, 
 	unsigned char outFlag, 
 	boolean hasOptions, 
@@ -29,7 +29,7 @@ errorCode decode_from_file(
 	void *inStreamPath, 
 	List *outData);
 
-errorCode decode_from_buffer(
+errorCode decodeFromBuffer(
 	const char *schemaPath, 
 	unsigned char outFlag, 
 	boolean hasOptions, 
@@ -37,22 +37,5 @@ errorCode decode_from_buffer(
 	void *inData, 
 	size_t inDataLen, 
 	List *outData);
-
-// errorCode decode_from_file(
-// 	EXIPSchema *schemaPtr, 
-// 	unsigned char outFlag, 
-// 	boolean outOfBandOpts, 
-// 	EXIOptions *opts,
-// 	void *inStreamPath, 
-// 	List *outData);
-
-// errorCode decode_from_buffer(
-// 	EXIPSchema *schemaPtr, 
-// 	unsigned char outFlag, 
-// 	boolean outOfBandOpts, 
-// 	EXIOptions *opts,
-// 	void *inData, 
-// 	size_t inDataLen, 
-// 	List *outData);
 
 #endif /* DECODE_H_ */
