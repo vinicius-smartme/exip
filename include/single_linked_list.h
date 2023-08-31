@@ -6,12 +6,12 @@
 \===================================================================*/
 
 /**
- * @file codec_utils.h
- * @brief Decode and encode utility functions.
+ * @file single_linked_list.h
+ * @brief A generic single linked list.
  */
 
-#ifndef CODE_UTILS_H_
-#define CODE_UTILS_H_
+#ifndef SINGLE_LINKED_LIST_H_
+#define SINGLE_LINKED_LIST_H_
 
 #include "procTypes.h"
 #include <stdio.h>
@@ -40,18 +40,4 @@ void clear_node(Node *node);
 void delete_list(List *list);
 List* copy_list(List* list);
 
-EXIPSchema parseSchema(char *xsdList);
-/*void parseOpsMask(char* mask, EXIOptions* ops);
-EXIOptions setOpsMask(
-    char preservation_opt_flags, 
-    boolean strict_schema, 
-    boolean fragments, 
-    boolean self_contained, 
-    boolean compression, 
-    boolean pre_compression, 
-    boolean alignment, 
-    size_t valuePartitionCapacity,
-    size_t valueMaxLength,
-    uint32_t blockSize);*/
-
-#endif /* CODE_UTILS_H_ */
+#endif /* SINGLE_LINKED_LIST_H_ */
