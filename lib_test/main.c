@@ -6,6 +6,9 @@
 int main () {
     char exi_path[] = "../examples/simpleDecoding/exipd-test-schema.exi";
     char schema_path[] = "../examples/simpleDecoding/exipd-test-schema-xsd.exi";
+    // char exi_path[] = "../examples/simpleDecoding/exipd-test.exi";
+    //char * schema_path = NULL;
+    char xml_path[] = "test_encode.xml";
     EXIPSchema schema = parseSchema(schema_path);
     unsigned char outFlag = OUT_EXI;
     boolean outOfBandOpts = FALSE;
@@ -13,7 +16,10 @@ int main () {
     char buf[BUFFER_LEN];
     FILE *infile;
     size_t inFileSize;
-
+    List output_file = new_list();
+    List output_buffer = new_list();
+    
+    printf("\n ------------------- Decode from file ------------------- \n");
     infile = fopen(exi_path, "rb" );
     if(!infile)
     {
@@ -21,9 +27,11 @@ int main () {
         exit(1);
     }
 
-    printf("\n ------------------- Decode from file ------------------- \n");
-    decode_from_file(&schema, outFlag, (void *)infile, outOfBandOpts, opts);
+    decode_from_file(&schema, outFlag, outOfBandOpts, opts, (void *)infile, &output_file);
     fclose(infile);
+    printf("\n ------------------- List: \n");
+    print_list(&output_file);
+    delete_list(&output_file);
 
     printf("\n ------------------- Decode from buffer ------------------- \n");
     infile = fopen(exi_path, "rb" );
@@ -41,7 +49,23 @@ int main () {
 		printf("Warning: Maybe file size is bigger than the buffer !!\n");
     }
     printf("Read %d(Buffer size: %d)\n", inFileSize, BUFFER_LEN);
-    
-    decode_from_buffer(&schema, outFlag, (void *)buf, inFileSize, outOfBandOpts, opts);
+    fclose(infile);
+
+    decode_from_buffer(&schema, outFlag, outOfBandOpts, opts, (void *)buf, inFileSize, &output_buffer);
+    printf("\n ------------------- List: \n");
+    print_list(&output_buffer);
+    //delete_list(&output_buffer);
+
+    printf("\n ------------------- Encode from buffer ------------------- \n");
+
+    output_file = new_list();
+    memset(buf, 0, BUFFER_LEN);
+    encode_from_buffer(&schema, outFlag, outOfBandOpts, opts, &output_buffer, output_buffer.size, buf, BUFFER_LEN);
+    printf("\n ------------------- List: \n");
+    print_list(&output_file);
+    delete_list(&output_file);
+
+    delete_list(&output_buffer);
+
     return 0;
 }
