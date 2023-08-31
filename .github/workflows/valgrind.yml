@@ -23,6 +23,7 @@ jobs:
           cd build/gcc
           make all
           make check
+          make examples
       # ===============================================================================================
       # Search for executable files (tests) and run valgrind on each of them
       - name: Run Valgrind
