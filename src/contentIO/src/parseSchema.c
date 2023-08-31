@@ -95,7 +95,6 @@ EXIOptions setOpsMask(
         .blockSize = 0,
         .valueMaxLength = 0,
         .valuePartitionCapacity = 0,
-        .user_defined_data = NULL,
     };
 
     if (strict_schema)

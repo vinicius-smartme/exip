@@ -60,11 +60,6 @@ struct EXIOptions
 	 * INDEX_MAX - unbounded
 	 */
 	Index valuePartitionCapacity;
-
-	/**
-	 * User defined meta-data may be added
-	 */
-	void* user_defined_data;
 };
 
 typedef struct EXIOptions EXIOptions;
