@@ -52,6 +52,298 @@ static String ENUM_DATA_4 = {"hej", 3};
 
 #define TRY_CATCH_ENCODE(func) TRY_CATCH(func, serialize.closeEXIStream(&testStrm))
 
+errorCode read_startDocument(unsigned char inFlag, const char *data)
+{
+	if (inFlag == IN_EXI)
+		return strstr(data, "SD") != NULL ? EXIP_OK : EXIP_INVALID_INPUT;
+	else if (inFlag == IN_XML)
+		return strcmp(data,  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n") == 0 ? EXIP_OK : EXIP_INVALID_INPUT;
+	else 
+		return EXIP_INVALID_INPUT;
+}
+
+errorCode read_endDocument(unsigned char inFlag, const char *data)
+{
+	if (!data) {
+		return EXIP_INVALID_INPUT;
+	}
+
+	if (inFlag == IN_EXI)
+		return strstr(data, "ED") != NULL ? EXIP_OK : EXIP_INVALID_INPUT;
+	else if (inFlag == IN_XML)
+		return EXIP_OK;
+	else 
+		return EXIP_INVALID_INPUT;
+}
+
+errorCode read_startElement(unsigned char inFlag, const char *data, List *elementList, String *uri, String *localName)
+{
+	char* strPtr = NULL;
+	char* localNamePtr = NULL;
+	size_t strLen = 0;
+	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
+	char tmp_uri[MAX_ATTRIBUTE_LENGTH];
+	char tmp_localName[MAX_ATTRIBUTE_LENGTH];
+	memset(tmp_uri, 0, MAX_ATTRIBUTE_LENGTH);
+	memset(tmp_localName, 0, MAX_ATTRIBUTE_LENGTH);
+
+	// Clears output parameters
+	if (!isStringEmpty(uri)) {
+		clearString(uri);
+	}
+	if (!isStringEmpty(localName)) {
+		clearString(localName);
+	}
+
+	if (inFlag== IN_EXI)
+	{
+		strPtr = strstr(data, "SE ");
+		if (strPtr == NULL) {
+			return EXIP_INVALID_INPUT;
+		}
+		else {
+			strPtr += 3;
+		}
+
+		// Checks if there is some Uri element
+		localNamePtr = strstr(strPtr, " ");
+		if (localNamePtr == NULL) {
+			// No Uri
+			strLen = strlen(data) - strLen;
+			TRY(asciiToString(strPtr, localName, TRUE));
+		}
+		else {
+			// Has Uri
+			localNamePtr++; // Remove the space
+			strLen = strlen(strPtr) - strlen(localNamePtr);
+			strncpy(tmp_uri, strPtr, strLen);
+			strLen = strlen(localNamePtr);
+			strncpy(tmp_localName, localNamePtr, strLen);
+			TRY(asciiToString(tmp_uri, uri, TRUE));
+			TRY(asciiToString(tmp_localName, localName, TRUE));
+		}
+	}
+	else if (inFlag== IN_XML)
+	{
+		strPtr = strstr(data, "<");
+		if (strPtr == NULL) {
+			return EXIP_INVALID_INPUT;
+		}
+		else {
+			strPtr++;
+		}
+
+		// Checks if there is some Uri element
+		localNamePtr = strstr(strPtr, ":");
+		if (localNamePtr == NULL) {
+			// No Uri
+			strLen = strlen(data) - strLen;
+			TRY(asciiToString(strPtr, localName, TRUE));
+		}
+		else {
+			// Has Uri
+			localNamePtr++; // Remove the double dots
+			strLen = strlen(strPtr) - strlen(localNamePtr);
+			strncpy(tmp_uri, strPtr, strLen);
+			strLen = strlen(localNamePtr);
+			strncpy(tmp_localName, localNamePtr, strLen);
+			TRY(asciiToString(tmp_uri, uri, TRUE));
+			TRY(asciiToString(tmp_localName, localName, TRUE));
+		}
+
+		// This entry will be verified when ending the element
+		push_back(elementList, localName->str, localName->length);
+	}
+	else 
+		return EXIP_INVALID_INPUT;
+
+	return EXIP_OK;
+}
+
+errorCode read_endElement(unsigned char inFlag, const char *data, List *elementList)
+{
+	char *strPtr = NULL;
+	Node *entry;
+	if (inFlag == IN_EXI)
+		return strstr(data, "EE") != NULL ? EXIP_OK : EXIP_INVALID_INPUT;
+	else if (inFlag == IN_XML)
+	{
+		strPtr = strstr(data, "</");
+		if (strPtr != NULL)
+		{
+			strPtr += 2;
+			// Verifies if the ending the element matches the one in the list
+			entry = pop_back(elementList);
+			if (strstr(entry->data, strPtr) != NULL) {
+				clear_node(entry);
+				return EXIP_OK;
+			}
+			else
+			{
+				clear_node(entry);
+				return EXIP_INVALID_EVENT;
+			}
+		    
+		}
+		else 
+			return EXIP_INVALID_INPUT;
+	}
+	else 
+		return EXIP_INVALID_INPUT;
+}
+
+errorCode read_attribute(unsigned char inFlag, const char *data, String *uri, String *localName, EXITypeClass *valueType)
+{
+	char* strPtr = NULL;
+	char* localNamePtr = NULL;
+	char* attPtr = NULL;
+	char attribute[MAX_ATTRIBUTE_LENGTH];
+	char tmp_uri[MAX_ATTRIBUTE_LENGTH];
+	char tmp_localName[MAX_ATTRIBUTE_LENGTH];
+	memset(attribute, 0, MAX_ATTRIBUTE_LENGTH);
+	memset(tmp_uri, 0, MAX_ATTRIBUTE_LENGTH);
+	memset(tmp_localName, 0, MAX_ATTRIBUTE_LENGTH);
+
+	size_t strLen = 0;
+	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
+
+	if (!data) 
+	{
+		// Some parameter is uninitialized
+		return EXIP_INVALID_INPUT;
+	}
+	
+	// Clears output parameters
+	if (uri && !isStringEmpty(uri)) {
+		clearString(uri);
+	}
+	if (localName && !isStringEmpty(localName)) {
+		clearString(localName);
+	}
+
+	if (inFlag== IN_EXI)
+	{
+		strPtr = strstr(data, "AT ");
+		if (strPtr == NULL) {
+			return EXIP_INVALID_INPUT;
+		}
+		else {
+			strPtr += 3;
+		}
+
+		attPtr = strstr(data, "=\"");
+		if (attPtr == NULL) 
+		{
+			// No Attribute found
+			return EXIP_INVALID_INPUT;
+		}
+		else
+		{
+			attPtr += 2;
+			strcpy(attribute, attPtr);
+			strLen = strlen(attribute);
+			// Remove the quotes
+			attribute[strLen-1] = '\0';
+		}
+
+		// Checks if there is some Uri element
+		localNamePtr = strstr(strPtr, " ");
+		if (localNamePtr == NULL) 
+		{
+			// No Uri
+			strLen = strlen(strPtr) - strlen(attPtr) - 2; // Removes the `=` and the quote
+			strncpy(tmp_localName, strPtr, strLen);
+			TRY(asciiToString(tmp_localName, localName, TRUE));
+		}
+		else 
+		{
+			// Has Uri
+			localNamePtr++; // Remove the space
+			strLen = strlen(strPtr) - strlen(localNamePtr);
+			strncpy(tmp_uri, strPtr, strLen);
+			strLen = strlen(localNamePtr) - strlen(attPtr) - 2; // Removes the `=` and the quote
+			strncpy(tmp_localName, localNamePtr, strLen);
+			TRY(asciiToString(tmp_uri, uri, TRUE));
+			TRY(asciiToString(tmp_localName, localName, TRUE));
+		}
+	}
+	else if (inFlag== IN_XML)
+	{
+		strPtr = strstr(data, "<");
+		if (strPtr == NULL) {
+			return EXIP_INVALID_INPUT;
+		}
+		else {
+			strPtr++;
+		}
+
+		attPtr = strstr(data, "=\"");
+		if (attPtr == NULL) 
+		{
+			// No Attribute found
+			return EXIP_INVALID_INPUT;
+		}
+		else
+		{
+			attPtr += 2;
+			strcpy(attribute, attPtr);
+			strLen = strlen(attribute);
+			// Remove the quotes
+			attribute[strLen-1] = '\0';
+		}
+
+		// Checks if there is some Uri element
+		localNamePtr = strstr(data, ":");
+		if (localNamePtr == NULL) {
+			// No Uri
+			strLen = strlen(data) - strLen;
+			TRY(asciiToString(strPtr, localName, TRUE));
+		}
+		else {
+			// Has Uri
+			localNamePtr++; // Remove the space
+			strLen = strlen(data) - strlen(localNamePtr);
+			strncpy(tmp_uri, strPtr, strLen);
+			strLen = strlen(localNamePtr) - strlen(attPtr) - 2; // Removes the `=` and the quote
+			strncpy(tmp_localName, localNamePtr, strLen);
+			TRY(asciiToString(tmp_uri, uri, TRUE));
+			TRY(asciiToString(tmp_localName, localName, TRUE));
+		}
+	}
+	else 
+		return EXIP_INVALID_INPUT;
+
+	return EXIP_OK;
+}
+
+errorCode read_stringData(unsigned char inFlag, const char *data, String *uri, String *localName) {
+	return EXIP_NOT_IMPLEMENTED_YET;
+}
+
+errorCode read_namespaceDeclaration(unsigned char inFlag, const char *data, String *uri, String *localName) {
+	return EXIP_NOT_IMPLEMENTED_YET;
+}
+
+errorCode read_comment(unsigned char inFlag, const char *data, String *uri, String *localName) {
+	return EXIP_NOT_IMPLEMENTED_YET;
+}
+
+errorCode read_processingInstruction(unsigned char inFlag, const char *data, String *uri, String *localName) {
+	return EXIP_NOT_IMPLEMENTED_YET;
+}
+
+errorCode read_docType(unsigned char inFlag, const char *data, String *uri, String *localName) {
+	return EXIP_NOT_IMPLEMENTED_YET;
+}
+
+errorCode read_EntityReference(unsigned char inFlag, const char *data, String *uri, String *localName) {
+	return EXIP_NOT_IMPLEMENTED_YET;
+}
+
+errorCode read_selfContained(unsigned char inFlag, const char *data, String *uri, String *localName) {
+	return EXIP_NOT_IMPLEMENTED_YET;
+}
+
 static errorCode encode(
 	EXIPSchema *schemaPtr,
 	unsigned char inFlag,
@@ -374,32 +666,41 @@ static errorCode encode(
 }
 
 errorCode encode_from_file(
-    EXIPSchema *schemaPtr, 
+    const char *schemaPath, 
 	unsigned char outFlag, 
-	boolean has_options, 
-	EXIOptions *opts,
-	void *outStreamPath, 
+	boolean hasOptions,  
+	EXIOptions *options,
+	void *inStreamPath, 
 	List *outData)
 {
+	EXIPSchema schema;
+	if (schemaPath && (parseSchema(schemaPath, &schema) != EXIP_OK)) {
+		return EXIP_INVALID_INPUT;
+	}
 	//return encode(schemaPtr, out_stream, writeFileOutputStream);
 	return 0;
 }
 
 errorCode encode_from_buffer(
-    EXIPSchema *schemaPtr, 
+    const char *schemaPath,
 	unsigned char outFlag, 
-	boolean has_options, 
-	EXIOptions *opts,
+	boolean hasOptions, 
+	EXIOptions *options,
 	List *inData,
 	size_t inDataLen,
 	void *outData,
 	size_t outDataLen)
 {
+	EXIPSchema schema;
+	if (schemaPath && (parseSchema(schemaPath, &schema) != EXIP_OK)) {
+		return EXIP_INVALID_INPUT;
+	}
+
 	return encode(
-		schemaPtr,
+		&schema,
 		outFlag,
-		has_options,
-		opts,
+		hasOptions,
+		options,
 		inData,
 		inDataLen,
 		NULL,
@@ -407,296 +708,4 @@ errorCode encode_from_buffer(
 		outData,
 		outDataLen
 	);
-}
-
-errorCode read_startDocument(unsigned char inFlag, const char *data)
-{
-	if (inFlag == IN_EXI)
-		return strstr(data, "SD") != NULL ? EXIP_OK : EXIP_INVALID_INPUT;
-	else if (inFlag == IN_XML)
-		return strcmp(data,  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n") == 0 ? EXIP_OK : EXIP_INVALID_INPUT;
-	else 
-		return EXIP_INVALID_INPUT;
-}
-
-errorCode read_endDocument(unsigned char inFlag, const char *data)
-{
-	if (!data) {
-		return EXIP_INVALID_INPUT;
-	}
-
-	if (inFlag == IN_EXI)
-		return strstr(data, "ED") != NULL ? EXIP_OK : EXIP_INVALID_INPUT;
-	else if (inFlag == IN_XML)
-		return EXIP_OK;
-	else 
-		return EXIP_INVALID_INPUT;
-}
-
-errorCode read_startElement(unsigned char inFlag, const char *data, List *elementList, String *uri, String *localName)
-{
-	char* strPtr = NULL;
-	char* localNamePtr = NULL;
-	size_t strLen = 0;
-	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
-	char tmp_uri[MAX_ATTRIBUTE_LENGTH];
-	char tmp_localName[MAX_ATTRIBUTE_LENGTH];
-	memset(tmp_uri, 0, MAX_ATTRIBUTE_LENGTH);
-	memset(tmp_localName, 0, MAX_ATTRIBUTE_LENGTH);
-
-	// Clears output parameters
-	if (!isStringEmpty(uri)) {
-		clearString(uri);
-	}
-	if (!isStringEmpty(localName)) {
-		clearString(localName);
-	}
-
-	if (inFlag== IN_EXI)
-	{
-		strPtr = strstr(data, "SE ");
-		if (strPtr == NULL) {
-			return EXIP_INVALID_INPUT;
-		}
-		else {
-			strPtr += 3;
-		}
-
-		// Checks if there is some Uri element
-		localNamePtr = strstr(strPtr, " ");
-		if (localNamePtr == NULL) {
-			// No Uri
-			strLen = strlen(data) - strLen;
-			TRY(asciiToString(strPtr, localName, TRUE));
-		}
-		else {
-			// Has Uri
-			localNamePtr++; // Remove the space
-			strLen = strlen(strPtr) - strlen(localNamePtr);
-			strncpy(tmp_uri, strPtr, strLen);
-			strLen = strlen(localNamePtr);
-			strncpy(tmp_localName, localNamePtr, strLen);
-			TRY(asciiToString(tmp_uri, uri, TRUE));
-			TRY(asciiToString(tmp_localName, localName, TRUE));
-		}
-	}
-	else if (inFlag== IN_XML)
-	{
-		strPtr = strstr(data, "<");
-		if (strPtr == NULL) {
-			return EXIP_INVALID_INPUT;
-		}
-		else {
-			strPtr++;
-		}
-
-		// Checks if there is some Uri element
-		localNamePtr = strstr(strPtr, ":");
-		if (localNamePtr == NULL) {
-			// No Uri
-			strLen = strlen(data) - strLen;
-			TRY(asciiToString(strPtr, localName, TRUE));
-		}
-		else {
-			// Has Uri
-			localNamePtr++; // Remove the double dots
-			strLen = strlen(strPtr) - strlen(localNamePtr);
-			strncpy(tmp_uri, strPtr, strLen);
-			strLen = strlen(localNamePtr);
-			strncpy(tmp_localName, localNamePtr, strLen);
-			TRY(asciiToString(tmp_uri, uri, TRUE));
-			TRY(asciiToString(tmp_localName, localName, TRUE));
-		}
-
-		// This entry will be verified when ending the element
-		push_back(elementList, localName->str, localName->length);
-	}
-	else 
-		return EXIP_INVALID_INPUT;
-
-	return EXIP_OK;
-}
-
-errorCode read_endElement(unsigned char inFlag, const char *data, List *elementList)
-{
-	char *strPtr = NULL;
-	Node *entry;
-	if (inFlag == IN_EXI)
-		return strstr(data, "EE") != NULL ? EXIP_OK : EXIP_INVALID_INPUT;
-	else if (inFlag == IN_XML)
-	{
-		strPtr = strstr(data, "</");
-		if (strPtr != NULL)
-		{
-			strPtr += 2;
-			// Verifies if the ending the element matches the one in the list
-			entry = pop_back(elementList);
-			if (strstr(entry->data, strPtr) != NULL) {
-				clear_node(entry);
-				return EXIP_OK;
-			}
-			else
-			{
-				clear_node(entry);
-				return EXIP_INVALID_EVENT;
-			}
-		    
-		}
-		else 
-			return EXIP_INVALID_INPUT;
-	}
-	else 
-		return EXIP_INVALID_INPUT;
-}
-
-errorCode read_attribute(unsigned char inFlag, const char *data, String *uri, String *localName, EXITypeClass *valueType)
-{
-	char* strPtr = NULL;
-	char* localNamePtr = NULL;
-	char* attPtr = NULL;
-	char attribute[MAX_ATTRIBUTE_LENGTH];
-	char tmp_uri[MAX_ATTRIBUTE_LENGTH];
-	char tmp_localName[MAX_ATTRIBUTE_LENGTH];
-	memset(attribute, 0, MAX_ATTRIBUTE_LENGTH);
-	memset(tmp_uri, 0, MAX_ATTRIBUTE_LENGTH);
-	memset(tmp_localName, 0, MAX_ATTRIBUTE_LENGTH);
-
-	size_t strLen = 0;
-	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
-
-	if (!data) 
-	{
-		// Some parameter is uninitialized
-		return EXIP_INVALID_INPUT;
-	}
-	
-	// Clears output parameters
-	if (uri && !isStringEmpty(uri)) {
-		clearString(uri);
-	}
-	if (localName && !isStringEmpty(localName)) {
-		clearString(localName);
-	}
-
-	if (inFlag== IN_EXI)
-	{
-		strPtr = strstr(data, "AT ");
-		if (strPtr == NULL) {
-			return EXIP_INVALID_INPUT;
-		}
-		else {
-			strPtr += 3;
-		}
-
-		attPtr = strstr(data, "=\"");
-		if (attPtr == NULL) 
-		{
-			// No Attribute found
-			return EXIP_INVALID_INPUT;
-		}
-		else
-		{
-			attPtr += 2;
-			strcpy(attribute, attPtr);
-			strLen = strlen(attribute);
-			// Remove the quotes
-			attribute[strLen-1] = '\0';
-		}
-
-		// Checks if there is some Uri element
-		localNamePtr = strstr(strPtr, " ");
-		if (localNamePtr == NULL) 
-		{
-			// No Uri
-			strLen = strlen(strPtr) - strlen(attPtr) - 2; // Removes the `=` and the quote
-			strncpy(tmp_localName, strPtr, strLen);
-			TRY(asciiToString(tmp_localName, localName, TRUE));
-		}
-		else 
-		{
-			// Has Uri
-			localNamePtr++; // Remove the space
-			strLen = strlen(strPtr) - strlen(localNamePtr);
-			strncpy(tmp_uri, strPtr, strLen);
-			strLen = strlen(localNamePtr) - strlen(attPtr) - 2; // Removes the `=` and the quote
-			strncpy(tmp_localName, localNamePtr, strLen);
-			TRY(asciiToString(tmp_uri, uri, TRUE));
-			TRY(asciiToString(tmp_localName, localName, TRUE));
-		}
-	}
-	else if (inFlag== IN_XML)
-	{
-		strPtr = strstr(data, "<");
-		if (strPtr == NULL) {
-			return EXIP_INVALID_INPUT;
-		}
-		else {
-			strPtr++;
-		}
-
-		attPtr = strstr(data, "=\"");
-		if (attPtr == NULL) 
-		{
-			// No Attribute found
-			return EXIP_INVALID_INPUT;
-		}
-		else
-		{
-			attPtr += 2;
-			strcpy(attribute, attPtr);
-			strLen = strlen(attribute);
-			// Remove the quotes
-			attribute[strLen-1] = '\0';
-		}
-
-		// Checks if there is some Uri element
-		localNamePtr = strstr(data, ":");
-		if (localNamePtr == NULL) {
-			// No Uri
-			strLen = strlen(data) - strLen;
-			TRY(asciiToString(strPtr, localName, TRUE));
-		}
-		else {
-			// Has Uri
-			localNamePtr++; // Remove the space
-			strLen = strlen(data) - strlen(localNamePtr);
-			strncpy(tmp_uri, strPtr, strLen);
-			strLen = strlen(localNamePtr) - strlen(attPtr) - 2; // Removes the `=` and the quote
-			strncpy(tmp_localName, localNamePtr, strLen);
-			TRY(asciiToString(tmp_uri, uri, TRUE));
-			TRY(asciiToString(tmp_localName, localName, TRUE));
-		}
-	}
-	else 
-		return EXIP_INVALID_INPUT;
-
-	return EXIP_OK;
-}
-
-errorCode read_stringData(unsigned char inFlag, const char *data, String *uri, String *localName) {
-	return EXIP_NOT_IMPLEMENTED_YET;
-}
-
-errorCode read_namespaceDeclaration(unsigned char inFlag, const char *data, String *uri, String *localName) {
-	return EXIP_NOT_IMPLEMENTED_YET;
-}
-
-errorCode read_comment(unsigned char inFlag, const char *data, String *uri, String *localName) {
-	return EXIP_NOT_IMPLEMENTED_YET;
-}
-
-errorCode read_processingInstruction(unsigned char inFlag, const char *data, String *uri, String *localName) {
-	return EXIP_NOT_IMPLEMENTED_YET;
-}
-
-errorCode read_docType(unsigned char inFlag, const char *data, String *uri, String *localName) {
-	return EXIP_NOT_IMPLEMENTED_YET;
-}
-
-errorCode read_EntityReference(unsigned char inFlag, const char *data, String *uri, String *localName) {
-	return EXIP_NOT_IMPLEMENTED_YET;
-}
-
-errorCode read_selfContained(unsigned char inFlag, const char *data, String *uri, String *localName) {
-	return EXIP_NOT_IMPLEMENTED_YET;
 }

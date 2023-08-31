@@ -168,19 +168,31 @@ static errorCode decode(
 		return tmp_err_code;
 }
 
+// errorCode decode_from_file(
+// 	EXIPSchema *schemaPtr, 
+// 	unsigned char outFlag, 
+// 	boolean outOfBandOpts, 
+// 	EXIOptions *opts,
+// 	void *inStreamPath, 
+// 	List *outData)
 errorCode decode_from_file(
-	EXIPSchema *schemaPtr, 
+	const char *schemaPath, 
 	unsigned char outFlag, 
-	boolean outOfBandOpts, 
-	EXIOptions *opts,
+	boolean hasOptions, 
+	EXIOptions *options,
 	void *inStreamPath, 
 	List *outData)
 {
+	EXIPSchema schema;
+	if (schemaPath && (parseSchema(schemaPath, &schema) != EXIP_OK)) {
+		return EXIP_INVALID_INPUT;
+	}
+
 	return decode(
-		schemaPtr,
+		&schema,
 		outFlag,
-		outOfBandOpts,
-		opts,
+		hasOptions,
+		options,
 		inStreamPath,
 		readFileInputStream,
 		NULL,
@@ -189,20 +201,25 @@ errorCode decode_from_file(
 }
 
 errorCode decode_from_buffer(
-	EXIPSchema *schemaPtr, 
+	const char *schemaPath, 
 	unsigned char outFlag, 
-	boolean outOfBandOpts, 
-	EXIOptions *opts,
+	boolean hasOptions, 
+	EXIOptions *options,
 	void *inData, 
 	size_t inDataLen, 
 	List *outData)
 {
+	EXIPSchema schema;
+	if (schemaPath && (parseSchema(schemaPath, &schema) != EXIP_OK)) {
+		return EXIP_INVALID_INPUT;
+	}
+
 	return decode
 	(
-		schemaPtr,
+		&schema,
 		outFlag,
-		outOfBandOpts,
-		opts, 
+		hasOptions,
+		options, 
 		NULL, 
 		NULL,
 		inData, 

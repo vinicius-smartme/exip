@@ -13,41 +13,30 @@
 #ifndef ENCODE_H_
 #define ENCODE_H_
 
-#include "procTypes.h"
-#include "codec_utils.h"
+#include "EXIOptions.h"
+#include "EXIPrimitives.h"
+#include "single_linked_list.h"
+#include "errorHandle.h"
 
 #define IN_EXI 0
 #define IN_XML 1
 
 errorCode encode_from_file(
-    EXIPSchema *schemaPtr, 
+    const char *schemaPath, 
 	unsigned char outFlag, 
-	boolean outOfBandOpts, 
-	EXIOptions *opts,
+	boolean hasOptions,  
+	EXIOptions *options,
 	void *inStreamPath, 
 	List *outData);
 
 errorCode encode_from_buffer(
-    EXIPSchema *schemaPtr, 
+    const char *schemaPath,
 	unsigned char outFlag, 
-	boolean has_options, 
-	EXIOptions *opts,
+	boolean hasOptions, 
+	EXIOptions *options,
 	List *inData,
 	size_t inDataLen,
 	void *outData,
 	size_t outDataLen);
 
-
-errorCode read_startDocument(unsigned char inFlag, const char *data);
-errorCode read_endDocument(unsigned char inFlag, const char *data);
-errorCode read_startElement(unsigned char inFlag, const char *data, List *elementList, String *uri, String *localName);
-errorCode read_endElement(unsigned char inFlag, const char *data, List *elementList);
-errorCode read_attribute(unsigned char inFlag, const char *data, String *uri, String *localName, EXITypeClass *valueType);
-errorCode read_stringData(unsigned char inFlag, const char *data, String *uri, String *localName);
-errorCode read_namespaceDeclaration(unsigned char inFlag, const char *data, String *uri, String *localName);
-errorCode read_comment(unsigned char inFlag, const char *data, String *uri, String *localName);
-errorCode read_processingInstruction(unsigned char inFlag, const char *data, String *uri, String *localName);
-errorCode read_docType(unsigned char inFlag, const char *data, String *uri, String *localName);
-errorCode read_EntityReference(unsigned char inFlag, const char *data, String *uri, String *localName);
-errorCode read_selfContained(unsigned char inFlag, const char *data, String *uri, String *localName);
 #endif /* ENCODE_H_ */

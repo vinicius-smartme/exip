@@ -13,27 +13,46 @@
 #ifndef DECODE_H_
 #define DECODE_H_
 
-#include "procTypes.h"
-#include "codec_utils.h"
+#include "EXIOptions.h"
+#include "EXIPrimitives.h"
+#include "single_linked_list.h"
+#include "errorHandle.h"
 
 #define OUT_EXI 0
 #define OUT_XML 1
 
 errorCode decode_from_file(
-	EXIPSchema *schemaPtr, 
+	const char *schemaPath, 
 	unsigned char outFlag, 
-	boolean outOfBandOpts, 
-	EXIOptions *opts,
+	boolean hasOptions, 
+	EXIOptions *options,
 	void *inStreamPath, 
 	List *outData);
 
 errorCode decode_from_buffer(
-	EXIPSchema *schemaPtr, 
+	const char *schemaPath, 
 	unsigned char outFlag, 
-	boolean outOfBandOpts, 
-	EXIOptions *opts,
+	boolean hasOptions, 
+	EXIOptions *options,
 	void *inData, 
 	size_t inDataLen, 
 	List *outData);
+
+// errorCode decode_from_file(
+// 	EXIPSchema *schemaPtr, 
+// 	unsigned char outFlag, 
+// 	boolean outOfBandOpts, 
+// 	EXIOptions *opts,
+// 	void *inStreamPath, 
+// 	List *outData);
+
+// errorCode decode_from_buffer(
+// 	EXIPSchema *schemaPtr, 
+// 	unsigned char outFlag, 
+// 	boolean outOfBandOpts, 
+// 	EXIOptions *opts,
+// 	void *inData, 
+// 	size_t inDataLen, 
+// 	List *outData);
 
 #endif /* DECODE_H_ */
