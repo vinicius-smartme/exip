@@ -38,4 +38,10 @@ jobs:
     # ===============================================================================================
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@main
+    # ===============================================================================================
+    - name: Archive CodeQL results
+      uses: actions/upload-artifact@v1
+      with:
+        name: codeql_report
+        path: /home/runner/work/_temp/codeql_databases/cpp.zip
       
