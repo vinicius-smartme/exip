@@ -74,7 +74,7 @@ static errorCode decode(
 	unsigned char outFlag,
 	boolean outOfBandOpts,
 	EXIOptions *opts,
-	void *inStreamPath,
+	void *inputFilePath,
 	size_t (*inputStream)(void *buf, size_t size, void *stream),
 	void *inData,
 	size_t inDataLen,
@@ -95,7 +95,7 @@ static errorCode decode(
 
 	// I: First, define an external stream for the input to the parser if any, otherwise tries as external buffer
 	buffer.ioStrm.readWriteToStream = inputStream;
-	buffer.ioStrm.stream = inStreamPath;
+	buffer.ioStrm.stream = inputFilePath;
 	if (inputStream == NULL && inData != NULL && inDataLen > 0)
 	{
 		buffer.bufStrm.buf = inData;
@@ -173,27 +173,35 @@ static errorCode decode(
 // 	unsigned char outFlag, 
 // 	boolean outOfBandOpts, 
 // 	EXIOptions *opts,
-// 	void *inStreamPath, 
+// 	void *inputFilePath, 
 // 	List *outData)
 errorCode decodeFromFile(
 	const char *schemaPath, 
 	unsigned char outFlag, 
 	boolean hasOptions, 
 	EXIOptions *options,
-	void *inStreamPath, 
+	const char *inputFilePath, 
 	List *outData)
 {
 	EXIPSchema schema;
+	void * inputFile;
 	if (schemaPath && (parseSchema(schemaPath, &schema) != EXIP_OK)) {
 		return EXIP_INVALID_INPUT;
 	}
+
+	inputFile = fopen(inputFilePath, "rb" );
+    if(!inputFile)
+    {
+        fprintf(stderr, "Unable to open XML file \"%s\" for parsing\n", inputFilePath);
+        exit(1);
+    }
 
 	return decode(
 		&schema,
 		outFlag,
 		hasOptions,
 		options,
-		inStreamPath,
+		inputFile,
 		readFileInputStream,
 		NULL,
 		0,

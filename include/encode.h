@@ -24,9 +24,9 @@
 errorCode encodeFromFile(
     const char *schemaPath, 
 	unsigned char outFlag, 
-	boolean hasOptions,  
+	boolean hasOptions, 
 	EXIOptions *options,
-	void *inStreamPath, 
+	const char *inputFilePath, 
 	List *outData);
 
 errorCode encodeFromBuffer(

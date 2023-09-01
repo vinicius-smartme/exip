@@ -26,7 +26,7 @@ errorCode decodeFromFile(
 	unsigned char outFlag, 
 	boolean hasOptions, 
 	EXIOptions *options,
-	void *inStreamPath, 
+	const char *inputFilePath, 
 	List *outData);
 
 errorCode decodeFromBuffer(
