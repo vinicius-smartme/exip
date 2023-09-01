@@ -21,7 +21,7 @@ errorCode parseSchema(char *xsdList, EXIPSchema *schema)
         schemaFilesCount++;
         if (schemaFilesCount > MAX_XSD_FILES_COUNT)
         {
-            fprintf(stderr, "Too many xsd files given as an input: %d", schemaFilesCount);
+            fprintf(stderr, "Too many xsd files given as an input: %d\n", schemaFilesCount);
             exit(1);
         }
 
@@ -29,7 +29,7 @@ errorCode parseSchema(char *xsdList, EXIPSchema *schema)
         schemaFile = fopen(schemaFileName, "rb");
         if (!schemaFile)
         {
-            fprintf(stderr, "Unable to open file %s", schemaFileName);
+            fprintf(stderr, "Unable to open XSD file \"%s\" for parsing\n", schemaFileName);
             exit(1);
         }
         else
@@ -43,7 +43,7 @@ errorCode parseSchema(char *xsdList, EXIPSchema *schema)
             buffer[i].buf = (char *)malloc(buffer[i].bufLen);
             if (!buffer[i].buf)
             {
-                fprintf(stderr, "Memory allocation error!");
+                fprintf(stderr, "Memory allocation error!\n");
                 fclose(schemaFile);
                 exit(1);
             }
@@ -69,7 +69,7 @@ errorCode parseSchema(char *xsdList, EXIPSchema *schema)
 
     if (tmp_err_code != EXIP_OK)
     {
-        printf("\nGrammar generation error occurred: %d", tmp_err_code);
+        printf("\nGrammar generation error occurred: %d\n", tmp_err_code);
     }
 
     return tmp_err_code;
@@ -207,7 +207,7 @@ void parseOpsMask(char *mask, EXIOptions *ops)
             break;
         default:
         {
-            fprintf(stderr, "Wrong options mask: %s", mask);
+            fprintf(stderr, "Wrong options mask: %s\n", mask);
             exit(1);
         }
         }
