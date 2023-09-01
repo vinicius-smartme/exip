@@ -472,197 +472,6 @@ static errorCode encode(
 			return EXIP_UNEXPECTED_ERROR;
 		}
 	};
-	/*
-	qname.uri = &NS_STR;
-	qname.localName = &ELEM_MULT_TEST_STR;
-	TRY_CATCH_ENCODE(serialize.startElement(&testStrm, qname, &valueType));
-
-	qname.uri = &NS_STR;
-	qname.localName = &ELEM_ENCODE_STR;
-	TRY_CATCH_ENCODE(serialize.startElement(&testStrm, qname, &valueType)); // <EXIPEncoder>
-
-	// NOTE: attributes should come lexicographically sorted during serialization
-
-	qname.uri = &NS_EMPTY_STR;
-	qname.localName = &ATTR_BYTE_STR;
-
-	if (schemaPtr != NULL)
-	{
-		// schema mode
-		TRY_CATCH_ENCODE(serialize.attribute(&testStrm, qname, TRUE, &valueType)); // testByte="
-		TRY_CATCH_ENCODE(serialize.intData(&testStrm, 55));
-	}
-	else
-	{
-		// schema-less mode
-		TRY_CATCH_ENCODE(serialize.attribute(&testStrm, qname, TRUE, &valueType)); // testByte="
-		TRY_CATCH_ENCODE(asciiToStringManaged("55", &chVal, &testStrm.memList, FALSE));
-		TRY_CATCH_ENCODE(serialize.stringData(&testStrm, chVal));
-	}
-
-	qname.localName = &ATTR_VERSION_STR;
-	TRY_CATCH_ENCODE(serialize.attribute(&testStrm, qname, TRUE, &valueType)); // version="
-
-	TRY_CATCH_ENCODE(asciiToStringManaged("0.2", &chVal, &testStrm.memList, FALSE));
-	TRY_CATCH_ENCODE(serialize.stringData(&testStrm, chVal));
-
-	TRY_CATCH_ENCODE(asciiToStringManaged("This is an example of serializing EXI streams using EXIP low level API", &chVal, &testStrm.memList, FALSE));
-	TRY_CATCH_ENCODE(serialize.stringData(&testStrm, chVal));
-
-	TRY_CATCH_ENCODE(serialize.endElement(&testStrm)); // </EXIPEncoder>
-
-	qname.uri = &NS_STR;
-	qname.localName = &ELEM_DESCR_STR;
-	TRY_CATCH_ENCODE(serialize.startElement(&testStrm, qname, &valueType)); // <description>
-
-	TRY_CATCH_ENCODE(asciiToStringManaged("This is a test of processing XML schemes with multiple XSD files", &chVal, &testStrm.memList, FALSE));
-	TRY_CATCH_ENCODE(serialize.stringData(&testStrm, chVal));
-
-	TRY_CATCH_ENCODE(serialize.endElement(&testStrm)); // </description>
-
-	qname.uri = &NS_NESTED_STR;
-	qname.localName = &ELEM_TEST_SETUP_STR;
-	TRY_CATCH_ENCODE(serialize.startElement(&testStrm, qname, &valueType)); // <testSetup>
-
-	qname.uri = &NS_EMPTY_STR;
-	qname.localName = &ATTR_GOAL_STR;
-	TRY_CATCH_ENCODE(serialize.attribute(&testStrm, qname, TRUE, &valueType)); // goal="
-
-	TRY_CATCH_ENCODE(asciiToStringManaged("Verify that the implementation works!", &chVal, &testStrm.memList, FALSE));
-	TRY_CATCH_ENCODE(serialize.stringData(&testStrm, chVal));
-
-	TRY_CATCH_ENCODE(asciiToStringManaged("Simple test element with single attribute", &chVal, &testStrm.memList, FALSE));
-	TRY_CATCH_ENCODE(serialize.stringData(&testStrm, chVal));
-
-	TRY_CATCH_ENCODE(serialize.endElement(&testStrm)); // </testSetup>
-
-	qname.uri = &NS_STR;
-	qname.localName = &ELEM_TYPE_TEST_STR;
-	TRY_CATCH_ENCODE(serialize.startElement(&testStrm, qname, &valueType)); // <type-test>
-
-	if (schemaPtr != NULL)
-	{
-		// schema mode
-		qname.uri = &NS_EMPTY_STR;
-		qname.localName = &ATTR_ID_STR;
-		TRY_CATCH_ENCODE(serialize.attribute(&testStrm, qname, TRUE, &valueType)); // id="
-		TRY_CATCH_ENCODE(serialize.intData(&testStrm, 1001));
-	}
-	else
-	{
-		// schema-less mode
-		qname.uri = &NS_EMPTY_STR;
-		qname.localName = &ATTR_ID_STR;
-		TRY_CATCH_ENCODE(serialize.attribute(&testStrm, qname, TRUE, &valueType)); // id="
-		TRY_CATCH_ENCODE(asciiToStringManaged("1001", &chVal, &testStrm.memList, FALSE));
-		TRY_CATCH_ENCODE(serialize.stringData(&testStrm, chVal));
-	}
-
-	qname.uri = &NS_NESTED_STR;
-	qname.localName = &ELEM_BOOL_STR;
-	TRY_CATCH_ENCODE(serialize.startElement(&testStrm, qname, &valueType)); // <bool>
-
-	if (schemaPtr != NULL)
-	{
-		// schema mode
-		TRY_CATCH_ENCODE(serialize.booleanData(&testStrm, TRUE));
-	}
-	else
-	{
-		// schema-less mode
-		TRY_CATCH_ENCODE(asciiToStringManaged("true", &chVal, &testStrm.memList, FALSE));
-		TRY_CATCH_ENCODE(serialize.stringData(&testStrm, chVal));
-	}
-
-	TRY_CATCH_ENCODE(serialize.endElement(&testStrm)); // </bool>
-
-	TRY_CATCH_ENCODE(serialize.endElement(&testStrm)); // </type-test>
-
-	qname.uri = &NS_STR;
-	qname.localName = &ELEM_EXT_TYPES_STR;
-	TRY_CATCH_ENCODE(serialize.startElement(&testStrm, qname, &valueType)); // <extendedTypeTest>
-
-	qname.uri = &NS_EMPTY_STR;
-	qname.localName = &ELEM_BYTE_TYPES_STR;
-	TRY_CATCH_ENCODE(serialize.startElement(&testStrm, qname, &valueType)); // <byteTest>
-
-	if (schemaPtr != NULL)
-	{
-		// schema mode
-		TRY_CATCH_ENCODE(serialize.intData(&testStrm, 11));
-	}
-	else
-	{
-		// schema-less mode
-		TRY_CATCH_ENCODE(asciiToStringManaged("11", &chVal, &testStrm.memList, FALSE));
-		TRY_CATCH_ENCODE(serialize.stringData(&testStrm, chVal));
-	}
-
-	TRY_CATCH_ENCODE(serialize.endElement(&testStrm)); // </byteTest>
-
-	qname.uri = &NS_EMPTY_STR;
-	qname.localName = &ELEM_DATE_TYPES_STR;
-	TRY_CATCH_ENCODE(serialize.startElement(&testStrm, qname, &valueType)); // <dateTimeTest>
-
-	if (schemaPtr != NULL)
-	{
-		// schema mode
-		EXIPDateTime dt;
-
-		dt.presenceMask = FRACT_PRESENCE;
-
-		dt.dateTime.tm_year = 112; // 2012
-		dt.dateTime.tm_mon = 6;	   // July
-		dt.dateTime.tm_mday = 31;
-		dt.dateTime.tm_hour = 13;
-		dt.dateTime.tm_min = 33;
-		dt.dateTime.tm_sec = 55;
-		dt.fSecs.value = 839;
-		dt.fSecs.offset = 5;
-
-		TRY_CATCH_ENCODE(serialize.dateTimeData(&testStrm, dt));
-	}
-	else
-	{
-		// schema-less mode
-		TRY_CATCH_ENCODE(asciiToStringManaged("2012 Jul 31 13:33", &chVal, &testStrm.memList, FALSE));
-		TRY_CATCH_ENCODE(serialize.stringData(&testStrm, chVal));
-	}
-
-	TRY_CATCH_ENCODE(serialize.endElement(&testStrm)); // </dateTimeTest>
-
-	qname.uri = &NS_EMPTY_STR;
-	qname.localName = &ELEM_BIN_TYPES_STR;
-	TRY_CATCH_ENCODE(serialize.startElement(&testStrm, qname, &valueType)); // <binaryTest>
-
-	if (schemaPtr != NULL)
-	{
-		// schema mode
-		TRY_CATCH_ENCODE(serialize.binaryData(&testStrm, SOME_BINARY_DATA, 10));
-	}
-	else
-	{
-		// schema-less mode
-		TRY_CATCH_ENCODE(serialize.stringData(&testStrm, SOME_BINARY_DATA_BASE64));
-	}
-
-	TRY_CATCH_ENCODE(serialize.endElement(&testStrm)); // </binaryTest>
-
-	qname.uri = &NS_EMPTY_STR;
-	qname.localName = &ELEM_ENUM_TYPES_STR;
-	TRY_CATCH_ENCODE(serialize.startElement(&testStrm, qname, &valueType)); // <enumTest>
-	TRY_CATCH_ENCODE(serialize.stringData(&testStrm, ENUM_DATA_4));
-	TRY_CATCH_ENCODE(serialize.endElement(&testStrm)); // </enumTest>
-
-	TRY_CATCH_ENCODE(serialize.endElement(&testStrm)); // </extendedTypeTest>
-
-	TRY_CATCH_ENCODE(serialize.endElement(&testStrm)); // </MultipleXSDsTest>
-	TRY_CATCH_ENCODE(serialize.endDocument(&testStrm));
-	
-	// VI: Free the memory allocated by the EXI stream object
-	TRY_CATCH_ENCODE(serialize.closeEXIStream(&testStrm));
-
-	return tmp_err_code;*/
 }
 
 errorCode encodeFromFile(
@@ -678,6 +487,8 @@ errorCode encodeFromFile(
 		return EXIP_INVALID_INPUT;
 	}
 	//return encode(schemaPtr, out_stream, writeFileOutputStream);
+
+	destroySchema(&schema);
 	return 0;
 }
 
@@ -692,11 +503,12 @@ errorCode encodeFromBuffer(
 	size_t outDataLen)
 {
 	EXIPSchema schema;
+	errorCode ret;
 	if (schemaPath && (parseSchema(schemaPath, &schema) != EXIP_OK)) {
 		return EXIP_INVALID_INPUT;
 	}
 
-	return encode(
+	ret = encode(
 		&schema,
 		outFlag,
 		hasOptions,
@@ -708,4 +520,8 @@ errorCode encodeFromBuffer(
 		outData,
 		outDataLen
 	);
+
+	destroySchema(&schema);
+
+	return ret;
 }

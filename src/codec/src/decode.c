@@ -15,6 +15,7 @@
 #include "stringManipulate.h"
 #include <stdio.h>
 #include <string.h>
+#include "../../grammarGen/include/grammarGenerator.h"
 
 #define INPUT_BUFFER_SIZE 200
 #define MAX_PREFIXES 10
@@ -30,7 +31,7 @@ struct appData
 	unsigned char prefixesCount;	  // needed for the OUT_XML Output Format
 	/**
 	 * @brief Decoded data to be outputted
-	 * 
+	 *
 	 */
 	List outData;
 };
@@ -78,8 +79,7 @@ static errorCode decode(
 	size_t (*inputStream)(void *buf, size_t size, void *stream),
 	void *inData,
 	size_t inDataLen,
-	List *outData
-	)
+	List *outData)
 {
 	Parser testParser;
 	char buf[INPUT_BUFFER_SIZE];
@@ -132,7 +132,7 @@ static errorCode decode(
 	testParser.handler.dateTimeData = sample_dateTimeData;
 	testParser.handler.binaryData = sample_binaryData;
 	testParser.handler.qnameData = sample_qnameData;
-	
+
 	// IV: Parse the header of the stream
 
 	TRY(parse.parseHeader(&testParser, outOfBandOpts));
@@ -161,7 +161,7 @@ static errorCode decode(
 	outData->tail = parsingData.outData.tail;
 
 	printf("Output size: %d (%p)\n", outData->size, (void *)outData);
-	
+
 	if (tmp_err_code == EXIP_PARSING_COMPLETE)
 		return EXIP_OK;
 	else
@@ -169,34 +169,36 @@ static errorCode decode(
 }
 
 // errorCode decodeFromFile(
-// 	EXIPSchema *schemaPtr, 
-// 	unsigned char outFlag, 
-// 	boolean outOfBandOpts, 
+// 	EXIPSchema *schemaPtr,
+// 	unsigned char outFlag,
+// 	boolean outOfBandOpts,
 // 	EXIOptions *opts,
-// 	void *inputFilePath, 
+// 	void *inputFilePath,
 // 	List *outData)
 errorCode decodeFromFile(
-	const char *schemaPath, 
-	unsigned char outFlag, 
-	boolean hasOptions, 
+	const char *schemaPath,
+	unsigned char outFlag,
+	boolean hasOptions,
 	EXIOptions *options,
-	const char *inputFilePath, 
+	const char *inputFilePath,
 	List *outData)
 {
 	EXIPSchema schema;
-	void * inputFile;
-	if (schemaPath && (parseSchema(schemaPath, &schema) != EXIP_OK)) {
+	void *inputFile;
+	errorCode ret;
+	if (schemaPath && (parseSchema(schemaPath, &schema) != EXIP_OK))
+	{
 		return EXIP_INVALID_INPUT;
 	}
 
-	inputFile = fopen(inputFilePath, "rb" );
-    if(!inputFile)
-    {
-        fprintf(stderr, "Unable to open XML file \"%s\" for parsing\n", inputFilePath);
-        exit(1);
-    }
+	inputFile = fopen(inputFilePath, "rb");
+	if (!inputFile)
+	{
+		fprintf(stderr, "Unable to open XML file \"%s\" for parsing\n", inputFilePath);
+		exit(1);
+	}
 
-	return decode(
+	ret = decode(
 		&schema,
 		outFlag,
 		hasOptions,
@@ -206,55 +208,68 @@ errorCode decodeFromFile(
 		NULL,
 		0,
 		outData);
+
+	destroySchema(&schema);
+	fclose(inputFile);
+
+	return ret;
 }
 
 errorCode decodeFromBuffer(
-	const char *schemaPath, 
-	unsigned char outFlag, 
-	boolean hasOptions, 
+	const char *schemaPath,
+	unsigned char outFlag,
+	boolean hasOptions,
 	EXIOptions *options,
-	void *inData, 
-	size_t inDataLen, 
+	void *inData,
+	size_t inDataLen,
 	List *outData)
 {
 	EXIPSchema schema;
-	if (schemaPath && (parseSchema(schemaPath, &schema) != EXIP_OK)) {
+	errorCode ret;
+
+	if (schemaPath && (parseSchema(schemaPath, &schema) != EXIP_OK))
+	{
 		return EXIP_INVALID_INPUT;
 	}
 
-	return decode
-	(
+	ret = decode(
 		&schema,
 		outFlag,
 		hasOptions,
-		options, 
-		NULL, 
+		options,
 		NULL,
-		inData, 
+		NULL,
+		inData,
 		inDataLen,
 		outData);
+
+	destroySchema(&schema);
+	return ret;
 }
 
 /**
- * @brief Update the last attribute located on the List tail if isAttribute is true. 
+ * @brief Update the last attribute located on the List tail if isAttribute is true.
  * Otherwise, add a new entry to the list.
- * 
+ *
  * @param isAttribute If the msg item is an attribute. Otherwise, considered as a new entry.
  * @param list The list to be updated.
  * @param msg The message to be added to the list.
  */
-static void updateListLastAttribute(unsigned char isAttribute, List *list, char *msg) {
+static void updateListLastAttribute(unsigned char isAttribute, List *list, char *msg)
+{
 	size_t elementSize = 0;
 	if (isAttribute)
 	{
 		// This is not a new list entry. So we need to get the tail from the list
 		// and append the new string to it.
 		Node *tail;
-		
-		if (list->tail != NULL) 
+
+		if (list->tail != NULL)
 		{
 			tail = list->tail;
-		} else {
+		}
+		else
+		{
 			printf("Error: Failed to get the Tail from the list.\n");
 			elementSize = list->size;
 			tail = getNth(list, elementSize);
@@ -263,7 +278,8 @@ static void updateListLastAttribute(unsigned char isAttribute, List *list, char 
 		elementSize = tail->size;
 		size_t msgLen = strlen(msg) + 1;
 		char *msg_buffer = calloc(elementSize + msgLen, sizeof(char));
-		if (!msg_buffer) {
+		if (!msg_buffer)
+		{
 			fprintf(stderr, "Memory allocation error!");
 			exit(-1);
 		}
@@ -362,17 +378,16 @@ static errorCode sample_startElement(QName qname, void *app_data)
 			appD->nameBuf[qname.localName->length] = '\0';
 		}
 		push(&(appD->stack), createElement(appD->nameBuf));
-		if (appD->unclosedElement) 
+		if (appD->unclosedElement)
 		{
 			printf(">\n");
-			//sprintf(msg, ">\n");
-			//msgIdx++;
+			// sprintf(msg, ">\n");
+			// msgIdx++;
 			updateListLastAttribute(1, &(appD->outData), &">\n\0");
 		}
 		printf("<%s", appD->nameBuf);
 		sprintf(msg + msgIdx, "<%s", appD->nameBuf);
 		msgIdx += strlen(appD->nameBuf) + 1;
-
 
 		if (prxHit == 0)
 		{
@@ -398,7 +413,8 @@ static errorCode sample_endElement(void *app_data)
 	char msg[128];
 	size_t msgIdx = 0;
 	struct appData *appD = (struct appData *)app_data;
-	if (appD->outputFormat == OUT_EXI) {
+	if (appD->outputFormat == OUT_EXI)
+	{
 		sprintf(msg, "EE\n\0");
 		printf("%s", msg);
 	}
@@ -406,13 +422,12 @@ static errorCode sample_endElement(void *app_data)
 	{
 		struct element *el;
 
-		if (appD->unclosedElement) 
+		if (appD->unclosedElement)
 		{
 			printf(">\n");
-			//sprintf(msg, ">\n");
-			//msgIdx++;
+			// sprintf(msg, ">\n");
+			// msgIdx++;
 			updateListLastAttribute(1, &(appD->outData), &">\n\0");
-
 		}
 		appD->unclosedElement = 0;
 		el = pop(&(appD->stack));
@@ -502,7 +517,7 @@ static errorCode sample_stringData(const String value, void *app_data)
 			msgIdx = strlen(msg);
 			printf("\n");
 			sprintf(msg + msgIdx, "\n\0");
-			msgIdx ++;
+			msgIdx++;
 		}
 	}
 	else if (appD->outputFormat == OUT_XML)
@@ -521,8 +536,8 @@ static errorCode sample_stringData(const String value, void *app_data)
 			if (appD->unclosedElement)
 			{
 				printf(">");
-				//sprintf(msg + msgIdx, ">");
-				//msgIdx++;
+				// sprintf(msg + msgIdx, ">");
+				// msgIdx++;
 				updateListLastAttribute(1, &(appD->outData), &">\0");
 			}
 			appD->unclosedElement = 0;
@@ -588,8 +603,8 @@ static errorCode sample_intData(Integer int_val, void *app_data)
 			if (appD->unclosedElement)
 			{
 				printf(">");
-				//sprintf(msg + msgIdx, ">");
-				//msgIdx++;
+				// sprintf(msg + msgIdx, ">");
+				// msgIdx++;
 				updateListLastAttribute(1, &(appD->outData), &">\0");
 			}
 			appD->unclosedElement = 0;
@@ -641,8 +656,8 @@ static errorCode sample_booleanData(boolean bool_val, void *app_data)
 			}
 			else
 				printf("false\n");
-				sprintf(msg + msgIdx, "CH false\"\n\0");
-				msgIdx += 11;
+			sprintf(msg + msgIdx, "CH false\"\n\0");
+			msgIdx += 11;
 		}
 	}
 	else if (appD->outputFormat == OUT_XML)
@@ -668,8 +683,8 @@ static errorCode sample_booleanData(boolean bool_val, void *app_data)
 			if (appD->unclosedElement)
 			{
 				printf(">");
-				//sprintf(msg + msgIdx, ">");
-				//msgIdx++;
+				// sprintf(msg + msgIdx, ">");
+				// msgIdx++;
 				updateListLastAttribute(1, &(appD->outData), &">\0");
 			}
 			appD->unclosedElement = 0;
@@ -738,8 +753,8 @@ static errorCode sample_floatData(Float fl_val, void *app_data)
 			if (appD->unclosedElement)
 			{
 				printf(">");
-				//sprintf(msg + msgIdx, ">");
-				//msgIdx++;
+				// sprintf(msg + msgIdx, ">");
+				// msgIdx++;
 				updateListLastAttribute(1, &(appD->outData), &">\0");
 			}
 			appD->unclosedElement = 0;
@@ -811,11 +826,11 @@ static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data)
 				   dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
 				   dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
 			printf("\"\n");
-			sprintf(msg + msgIdx, "%04d-%02d-%02dT%02d:%02d:%02d%s%s\"\n\0", 
+			sprintf(msg + msgIdx, "%04d-%02d-%02dT%02d:%02d:%02d%s%s\"\n\0",
 					dt_val.dateTime.tm_year + 1900,
-				   	dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
-				   	dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
-				   	dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
+					dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
+					dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
+					dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
 			msgIdx = strlen(msg);
 			appD->expectAttributeData = 0;
 		}
@@ -827,11 +842,11 @@ static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data)
 				   dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
 				   dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
 			printf("\n");
-			sprintf(msg + msgIdx, "CH %04d-%02d-%02dT%02d:%02d:%02d%s%s\n\0", 
+			sprintf(msg + msgIdx, "CH %04d-%02d-%02dT%02d:%02d:%02d%s%s\n\0",
 					dt_val.dateTime.tm_year + 1900,
-				   	dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
-				   	dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
-				   	dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
+					dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
+					dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
+					dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
 			msgIdx = strlen(msg);
 		}
 	}
@@ -844,11 +859,11 @@ static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data)
 				   dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
 				   dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
 			printf("\"");
-			sprintf(msg + msgIdx, "%04d-%02d-%02dT%02d:%02d:%02d%s%s\"\0", 
+			sprintf(msg + msgIdx, "%04d-%02d-%02dT%02d:%02d:%02d%s%s\"\0",
 					dt_val.dateTime.tm_year + 1900,
-				   	dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
-				   	dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
-				   	dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
+					dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
+					dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
+					dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
 			msgIdx = strlen(msg);
 			appD->expectAttributeData = 0;
 		}
@@ -857,8 +872,8 @@ static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data)
 			if (appD->unclosedElement)
 			{
 				printf(">");
-				//sprintf(msg + msgIdx, ">");
-				//msgIdx++;
+				// sprintf(msg + msgIdx, ">");
+				// msgIdx++;
 				updateListLastAttribute(1, &(appD->outData), &">\0");
 			}
 			appD->unclosedElement = 0;
@@ -866,11 +881,11 @@ static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data)
 				   dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
 				   dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
 				   dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
-			sprintf(msg + msgIdx, "%04d-%02d-%02dT%02d:%02d:%02d%s%s\0", 
+			sprintf(msg + msgIdx, "%04d-%02d-%02dT%02d:%02d:%02d%s%s\0",
 					dt_val.dateTime.tm_year + 1900,
-				   	dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
-				   	dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
-				   	dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
+					dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
+					dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
+					dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
 			msgIdx = strlen(msg);
 		}
 	}
@@ -920,8 +935,8 @@ static errorCode sample_binaryData(const char *binary_val, Index nbytes, void *a
 			if (appD->unclosedElement)
 			{
 				printf(">");
-				//sprintf(msg + msgIdx, ">");
-				//msgIdx++;
+				// sprintf(msg + msgIdx, ">");
+				// msgIdx++;
 				updateListLastAttribute(1, &(appD->outData), &">\0");
 			}
 			appD->unclosedElement = 0;
@@ -999,8 +1014,8 @@ static errorCode sample_qnameData(const QName qname, void *app_data)
 			if (appD->unclosedElement)
 			{
 				printf(">");
-				//sprintf(msg + msgIdx, ">");
-				//msgIdx++;
+				// sprintf(msg + msgIdx, ">");
+				// msgIdx++;
 				updateListLastAttribute(1, &(appD->outData), &">\0");
 			}
 			appD->unclosedElement = 0;
