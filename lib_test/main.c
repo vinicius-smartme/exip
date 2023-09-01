@@ -19,15 +19,8 @@ int main () {
     List output_buffer = newList();
     
     printf("\n ------------------- Decode from file ------------------- \n");
-    infile = fopen(exi_path, "rb" );
-    if(!infile)
-    {
-        printf("\nUnable to open file %s\n", exi_path);
-        exit(1);
-    }
 
-    decodeFromFile(schema_path, outFlag, outOfBandOpts, opts, (void *)infile, &output_file);
-    fclose(infile);
+    decodeFromFile(schema_path, outFlag, outOfBandOpts, opts, exi_path, &output_file);
     printf("\n ------------------- List: \n");
     printList(&output_file);
     deleteList(&output_file);
@@ -78,7 +71,7 @@ int main () {
 // #include "../src/common/include/dynamicArray.h"
 
 // #define OUTPUT_BUFFER_SIZE 2000
-// void fail_unless (boolean cond, const char* msg, errorCode tmp_err_code) {
+// void ck_assert_msg (boolean cond, const char* msg, errorCode tmp_err_code) {
 //     if (!cond) {
 //         fprintf(stderr, "Error: %s (error code: %d\n)", msg, tmp_err_code);
 //         exit(EXIT_FAILURE);
@@ -100,24 +93,24 @@ int main () {
 // 		testStrm.buffer.bufStrm = EMPTY_BUFFER_STREAM;
 // 		tmp_err_code += createValueTable(&testStrm.valueTable);
 // 		testStrm.schema = memManagedAllocate(&testStrm.memList, sizeof(EXIPSchema));
-// 		fail_unless (testStrm.schema != NULL, "Memory alloc error", 0);
+// 		ck_assert_msg (testStrm.schema != NULL, "Memory alloc error", 0);
 // 		/* Create and initialize initial string table entries */
 // 		tmp_err_code += createDynArray(&testStrm.schema->uriTable.dynArray, sizeof(UriEntry), DEFAULT_URI_ENTRIES_NUMBER);
 // 		tmp_err_code += createUriTableEntries(&testStrm.schema->uriTable, FALSE);
 // 	}
-// 	fail_unless (tmp_err_code == EXIP_OK, "initStream returns an error code %d", tmp_err_code);
+// 	ck_assert_msg (tmp_err_code == EXIP_OK, "initStream returns an error code %d", tmp_err_code);
 
 // 	testStrm.gStack->currQNameID.uriId = 1; // http://www.w3.org/XML/1998/namespace
 // 	testStrm.gStack->currQNameID.lnId = 2; // lang
 
 // 	tmp_err_code = addValueEntry(&testStrm, testStr, testStrm.gStack->currQNameID);
 
-// 	fail_unless (tmp_err_code == EXIP_OK, "addValueEntry returns an error code %d", tmp_err_code);
+// 	ck_assert_msg (tmp_err_code == EXIP_OK, "addValueEntry returns an error code %d", tmp_err_code);
 // #if VALUE_CROSSTABLE_USE
-// 	fail_unless (testStrm.schema->uriTable.uri[testStrm.gStack->currQNameID.uriId].lnTable.ln[testStrm.gStack->currQNameID.lnId].vxTable != NULL, "addValueEntry does not create vxTable", 0);
-// 	fail_unless (testStrm.schema->uriTable.uri[testStrm.gStack->currQNameID.uriId].lnTable.ln[testStrm.gStack->currQNameID.lnId].vxTable->count == 1, "addValueEntry does not create correct vxTable", 0);
+// 	ck_assert_msg (testStrm.schema->uriTable.uri[testStrm.gStack->currQNameID.uriId].lnTable.ln[testStrm.gStack->currQNameID.lnId].vxTable != NULL, "addValueEntry does not create vxTable", 0);
+// 	ck_assert_msg (testStrm.schema->uriTable.uri[testStrm.gStack->currQNameID.uriId].lnTable.ln[testStrm.gStack->currQNameID.lnId].vxTable->count == 1, "addValueEntry does not create correct vxTable", 0);
 // #endif
-// 	fail_unless (testStrm.valueTable.count == 1, "addValueEntry does not create global value entry", 0);
+// 	ck_assert_msg (testStrm.valueTable.count == 1, "addValueEntry does not create global value entry", 0);
 
 // 	destroyDynArray(&testStrm.valueTable.dynArray);
 // 	destroyDynArray(&testStrm.schema->uriTable.dynArray);
