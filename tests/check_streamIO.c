@@ -52,11 +52,11 @@ START_TEST (test_readNextBit)
 
   err = readNextBit(&testStream, &bit_val);
 
-  fail_unless (bit_val == 1,
+  ck_assert_msg (bit_val == 1,
 	       "The bit 1 from the stream is read as 0");
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
 	       "readNextBit returns error code %d", err);
-  fail_unless (testStream.context.bitPointer == 1,
+  ck_assert_msg (testStream.context.bitPointer == 1,
     	       "The readNextBit function did not move the bit Pointer of the stream correctly");
 
   // Set the bit pointer to the first byte boundary
@@ -64,11 +64,11 @@ START_TEST (test_readNextBit)
 
   err = readNextBit(&testStream, &bit_val);
 
-  fail_unless (bit_val == 0,
+  ck_assert_msg (bit_val == 0,
   	       "The bit 0 from the stream is read as 1");
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
   	       "readNextBit returns error code %d", err);
-  fail_unless (testStream.context.bitPointer == 0 && testStream.context.bufferIndx == 1,
+  ck_assert_msg (testStream.context.bitPointer == 0 && testStream.context.bufferIndx == 1,
    	       "The readNextBit function did not move the bit Pointer of the stream correctly");
 
   // Set the bit pointer to the second byte boundary
@@ -76,13 +76,13 @@ START_TEST (test_readNextBit)
 
   err = readNextBit(&testStream, &bit_val);
 
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
   	       "readNextBit returns error code %d", err);
-  fail_unless (testStream.context.bitPointer == 0 && testStream.context.bufferIndx == 2,
+  ck_assert_msg (testStream.context.bitPointer == 0 && testStream.context.bufferIndx == 2,
    	       "The readNextBit function did not move the bit Pointer of the stream correctly");
 
   err = readNextBit(&testStream, &bit_val);
-  fail_unless (err == EXIP_BUFFER_END_REACHED, "Incorrect error code");
+  ck_assert_msg (err == EXIP_BUFFER_END_REACHED, "Incorrect error code");
 
 }
 END_TEST
@@ -108,11 +108,11 @@ START_TEST (test_readBits)
 
   err = readBits(&testStream, 4, &bits_val);
 
-  fail_unless (bits_val == 13,
+  ck_assert_msg (bits_val == 13,
 	       "The bits 1101 from the stream are read as %d", bits_val);
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
 	       "readBits returns error code %d", err);
-  fail_unless (testStream.context.bitPointer == 4,
+  ck_assert_msg (testStream.context.bitPointer == 4,
   	       "The readBits function did not move the bit Pointer of the stream correctly");
 
   // Set the bit pointer to the first byte boundary
@@ -120,15 +120,15 @@ START_TEST (test_readBits)
 
   err = readBits(&testStream, 5, &bits_val);
 
-  fail_unless (bits_val == 6,
+  ck_assert_msg (bits_val == 6,
 		      "The bits 00110 from the stream are read as %d", bits_val);
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
     	       "readNextBit returns error code %d", err);
-  fail_unless (testStream.context.bitPointer == 4 && testStream.context.bufferIndx == 1,
+  ck_assert_msg (testStream.context.bitPointer == 4 && testStream.context.bufferIndx == 1,
      	       "The readBits function did not move the bit Pointer of the stream correctly");
 
   err = readBits(&testStream, 5, &bits_val);
-  fail_unless (err == EXIP_BUFFER_END_REACHED, "Incorrect error code");
+  ck_assert_msg (err == EXIP_BUFFER_END_REACHED, "Incorrect error code");
 }
 END_TEST
 
@@ -159,11 +159,11 @@ START_TEST (test_writeNextBit)
 
   test = (buf[0] & 0x80 /* 0b10000000 */ ) != 0;
 
-  fail_unless (test == 1,
+  ck_assert_msg (test == 1,
 	       "The bit 1 was written as 0");
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
 	       "writeNextBit returns error code %d", err);
-  fail_unless (testStream.context.bitPointer == 1,
+  ck_assert_msg (testStream.context.bitPointer == 1,
     	       "The writeNextBit function did not move the bit Pointer of the stream correctly");
 
   // Set the bit pointer to the first byte boundary
@@ -173,18 +173,18 @@ START_TEST (test_writeNextBit)
 
   test = (buf[0] & 0x01) != 0;
 
-  fail_unless (test == 0,
+  ck_assert_msg (test == 0,
   	       "The bit 0 was written as 1");
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
   	       "writeNextBit returns error code %d", err);
-  fail_unless (testStream.context.bitPointer == 0 && testStream.context.bufferIndx == 1,
+  ck_assert_msg (testStream.context.bitPointer == 0 && testStream.context.bufferIndx == 1,
    	       "The writeNextBit function did not move the bit Pointer of the stream correctly");
 
   testStream.context.bufferIndx = 2;
   testStream.context.bitPointer = 0;
 
   err = writeNextBit(&testStream, 0);
-  fail_unless (err == EXIP_BUFFER_END_REACHED, "Incorrect error code");
+  ck_assert_msg (err == EXIP_BUFFER_END_REACHED, "Incorrect error code");
 
 }
 END_TEST
@@ -212,11 +212,11 @@ START_TEST (test_writeNBits)
 
   test = ((unsigned int) buf[0]) >> 1;
 
-  fail_unless (test == 19,
+  ck_assert_msg (test == 19,
 	       "The number 19 was written as %d", test);
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
 	       "writeNBits returns error code %d", err);
-  fail_unless (testStream.context.bitPointer == 7,
+  ck_assert_msg (testStream.context.bitPointer == 7,
   	       "The writeNBits function did not move the bit Pointer of the stream correctly");
 
   // Set the bit pointer to the first byte boundary
@@ -228,15 +228,15 @@ START_TEST (test_writeNBits)
 
   test1 = (buf[1] & 0xF0 /* 0b11110000 */ ) >> 4;
 
-  fail_unless (test == 0 && test1 == 9,
+  ck_assert_msg (test == 0 && test1 == 9,
 		      "writeNBits function doesn't write correctly");
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
     	       "writeNBits returns error code %d", err);
-  fail_unless (testStream.context.bitPointer == 4 && testStream.context.bufferIndx == 1,
+  ck_assert_msg (testStream.context.bitPointer == 4 && testStream.context.bufferIndx == 1,
      	       "The writeNBits function did not move the bit Pointer of the stream correctly");
 
   err = writeNBits(&testStream, 5, 16);
-  fail_unless (err == EXIP_BUFFER_END_REACHED, "Incorrect error code");
+  ck_assert_msg (err == EXIP_BUFFER_END_REACHED, "Incorrect error code");
 }
 END_TEST
 
@@ -268,11 +268,11 @@ START_TEST (test_decodeNBitUnsignedInteger)
 
   err = decodeNBitUnsignedInteger(&testStream, 6, &bit_val);
 
-  fail_unless (bit_val == 53,
+  ck_assert_msg (bit_val == 53,
 	       "The 110101 from the stream is read as %d", bit_val);
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
 	       "decodeNBitUnsignedInteger returns error code %d", err);
-  fail_unless (testStream.context.bitPointer == 6,
+  ck_assert_msg (testStream.context.bitPointer == 6,
     	       "The decodeNBitUnsignedInteger function did not move the bit Pointer of the stream correctly");
 
 }
@@ -301,11 +301,11 @@ START_TEST (test_decodeBoolean)
 
   err = decodeBoolean(&testStream, &bit_val);
 
-  fail_unless (bit_val == 1,
+  ck_assert_msg (bit_val == 1,
 	       "The the bit 1 from the stream is read as %d", bit_val);
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
 	       "decodeBoolean returns error code %d", err);
-  fail_unless (testStream.context.bitPointer == 1,
+  ck_assert_msg (testStream.context.bitPointer == 1,
     	       "The decodeBoolean function did not move the bit Pointer of the stream correctly");
 }
 END_TEST
@@ -334,13 +334,13 @@ START_TEST (test_decodeUnsignedInteger)
 
   err = decodeUnsignedInteger(&testStream, &bit_val);
 
-  fail_unless (bit_val == 12372,
+  ck_assert_msg (bit_val == 12372,
 	       "The UnsignedInteger 12372 from the stream is read as %d", bit_val);
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
 	       "decodeUnsignedInteger returns error code %d", err);
-  fail_unless (testStream.context.bitPointer == 0,
+  ck_assert_msg (testStream.context.bitPointer == 0,
     	       "The decodeUnsignedInteger function did not move the bit Pointer of the stream correctly");
-  fail_unless (testStream.context.bufferIndx == 2,
+  ck_assert_msg (testStream.context.bufferIndx == 2,
       	       "The decodeUnsignedInteger function did not move the byte Pointer of the stream correctly");
 
 }
@@ -375,15 +375,15 @@ START_TEST (test_decodeString)
 
   err = decodeString(&testStream, &bit_val);
 
-  fail_unless (bit_val.length == 2,
+  ck_assert_msg (bit_val.length == 2,
 	       "The String length of 2 is reported as %d from decodeString", bit_val.length);
-  fail_unless (bit_val.str[0] == 'e' && bit_val.str[1] == 'T',
+  ck_assert_msg (bit_val.str[0] == 'e' && bit_val.str[1] == 'T',
   	       "The String \"eT\" is decoded wrong by decodeString");
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
 	       "decodeString returns error code %d", err);
-  fail_unless (testStream.context.bitPointer == 0,
+  ck_assert_msg (testStream.context.bitPointer == 0,
     	       "The decodeString function did not move the bit Pointer of the stream correctly");
-  fail_unless (testStream.context.bufferIndx == 3,
+  ck_assert_msg (testStream.context.bufferIndx == 3,
       	       "The decodeString function did not move the byte Pointer of the stream correctly");
 
 }
@@ -442,15 +442,15 @@ START_TEST (test_decodeBinary)
 	}
   }
   
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
 	       "decodeBinary returns error code %d", err);
-  fail_unless (bytes == 5,
+  ck_assert_msg (bytes == 5,
 	       "The length of the binary content is read as %d (actual : %d)", bytes,5);
-  fail_unless (same == 1,
+  ck_assert_msg (same == 1,
 	       "The binary content is read wrongly");
-  fail_unless (testStream.context.bitPointer == 0,
+  ck_assert_msg (testStream.context.bitPointer == 0,
     	       "The decodeBinary function did not move the bit Pointer of the stream correctly");
-  fail_unless (testStream.context.bufferIndx == 6,
+  ck_assert_msg (testStream.context.bufferIndx == 6,
       	       "The decodeBinary function did not move the byte Pointer of the stream correctly");
 
 //Test2:
@@ -469,15 +469,15 @@ START_TEST (test_decodeBinary)
 	}
   }
   
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
 	       "decodeBinary returns error code %d", err);
-  fail_unless (bytes == 8,
+  ck_assert_msg (bytes == 8,
 	       "The length of the binary content is read as %d (actual : %d)", bytes,8);
-  fail_unless (same == 1,
+  ck_assert_msg (same == 1,
 	       "The binary content is read wrongly");
-  fail_unless (testStream.context.bitPointer == 0,
+  ck_assert_msg (testStream.context.bitPointer == 0,
     	       "The decodeBinary function did not move the bit Pointer of the stream correctly");
-  fail_unless (testStream.context.bufferIndx == 15,
+  ck_assert_msg (testStream.context.bufferIndx == 15,
       	       "The decodeBinary function did not move the byte Pointer of the stream correctly");
 
 }
@@ -525,13 +525,13 @@ START_TEST (test_decodeFloat)
 		actual_res *= 10;
 	}
 
-	fail_unless (err == EXIP_OK,
+	ck_assert_msg (err == EXIP_OK,
 		   "decodeFloat returns error code %d", err);
-	fail_unless (actual_res == expected_res,
+	ck_assert_msg (actual_res == expected_res,
 		   "The float value is read as %f (actual : %f)", actual_res, expected_res);
-	fail_unless (testStream.context.bitPointer == 2,
+	ck_assert_msg (testStream.context.bitPointer == 2,
 			   "The decodeBinary function did not move the bit Pointer of the stream correctly");
-	fail_unless (testStream.context.bufferIndx == 2,
+	ck_assert_msg (testStream.context.bufferIndx == 2,
 			   "The decodeBinary function did not move the byte Pointer of the stream correctly");
 
 }
@@ -561,13 +561,13 @@ START_TEST (test_decodeIntegerValue)
 
   err = decodeIntegerValue(&testStream, &bit_val);
 
-  fail_unless (bit_val == -41,
+  ck_assert_msg (bit_val == -41,
 	       "The IntegerValue -41 from the stream is read as %d", bit_val);
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
 	       "decodeIntegerValue returns error code %d", err);
-  fail_unless (testStream.context.bitPointer == 1,
+  ck_assert_msg (testStream.context.bitPointer == 1,
     	       "The decodeIntegerValue function did not move the bit Pointer of the stream correctly");
-  fail_unless (testStream.context.bufferIndx == 1,
+  ck_assert_msg (testStream.context.bufferIndx == 1,
       	       "The decodeIntegerValue function did not move the byte Pointer of the stream correctly");
 
   buf[0] = (char) 0x14; /* 0b00010100 */
@@ -576,13 +576,13 @@ START_TEST (test_decodeIntegerValue)
 
   err = decodeIntegerValue(&testStream, &bit_val);
 
-  fail_unless (bit_val == 40,
+  ck_assert_msg (bit_val == 40,
 	       "The IntegerValue 40 from the stream is read as %d", bit_val);
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
 	       "decodeIntegerValue returns error code %d", err);
-  fail_unless (testStream.context.bitPointer == 1,
+  ck_assert_msg (testStream.context.bitPointer == 1,
     	       "The decodeIntegerValue function did not move the bit Pointer of the stream correctly");
-  fail_unless (testStream.context.bufferIndx == 1,
+  ck_assert_msg (testStream.context.bufferIndx == 1,
       	       "The decodeIntegerValue function did not move the byte Pointer of the stream correctly");
 
 }
@@ -619,12 +619,12 @@ START_TEST (test_decodeDecimalValue)
 
 	err = decodeDecimalValue(&testStream, &dec_val);
 
-	fail_unless (res.mantissa == dec_val.mantissa && res.exponent == dec_val.exponent, "The value 5.001 is decoded as %d*10^%d", dec_val.mantissa, dec_val.exponent);
-	fail_unless (err == EXIP_OK,
+	ck_assert_msg (res.mantissa == dec_val.mantissa && res.exponent == dec_val.exponent, "The value 5.001 is decoded as %d*10^%d", dec_val.mantissa, dec_val.exponent);
+	ck_assert_msg (err == EXIP_OK,
 		   "decodeDecimalValue returns error code %d", err);
-	fail_unless (testStream.context.bitPointer == 1,
+	ck_assert_msg (testStream.context.bitPointer == 1,
 			   "The decodeIntegerValue function did not move the bit Pointer of the stream correctly");
-	fail_unless (testStream.context.bufferIndx == 2,
+	ck_assert_msg (testStream.context.bufferIndx == 2,
 			   "The decodeIntegerValue function did not move the byte Pointer of the stream correctly");
 
 }
@@ -660,11 +660,11 @@ START_TEST (test_encodeNBitUnsignedInteger)
   test = buf[0] | 0;
   test2 = (unsigned char) buf[1] >> 7;
 
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
   	       "encodeNBitUnsignedInteger returns error code %d", err);
-  fail_unless (test == 206 && test2 == 0,
+  ck_assert_msg (test == 206 && test2 == 0,
 	       "encodeNBitUnsignedInteger does not encode correctly");
-  fail_unless (testStream.context.bitPointer == 1 && testStream.context.bufferIndx == 1,
+  ck_assert_msg (testStream.context.bitPointer == 1 && testStream.context.bufferIndx == 1,
     	       "The encodeNBitUnsignedInteger function did not move the bit Pointer of the stream correctly");
 
 }
@@ -695,22 +695,22 @@ START_TEST (test_encodeBoolean)
 
   bit_val = (unsigned char) buf[0] >> 7;
 
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
 	       "encodeBoolean returns error code %d", err);
-  fail_unless (bit_val == 1,
+  ck_assert_msg (bit_val == 1,
 	       "encodeBoolean does not write correctly");
-  fail_unless (testStream.context.bitPointer == 1,
+  ck_assert_msg (testStream.context.bitPointer == 1,
     	       "The encodeBoolean function did not move the bit Pointer of the stream correctly");
 
   err = encodeBoolean(&testStream, 0);
 
   bit_val = (unsigned char) buf[0] >> 6;
 
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
 	   "encodeBoolean returns error code %d", err);
-  fail_unless (bit_val == 2,
+  ck_assert_msg (bit_val == 2,
 	   "encodeBoolean does not write correctly");
-  fail_unless (testStream.context.bitPointer == 2,
+  ck_assert_msg (testStream.context.bitPointer == 2,
 		   "The encodeBoolean function did not move the bit Pointer of the stream correctly");
 }
 END_TEST
@@ -742,14 +742,14 @@ START_TEST (test_encodeUnsignedInteger)
   test1 = (unsigned char) buf[0];
   test2 = (unsigned char) buf[1];
 
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
 		   "encodeUnsignedInteger returns error code %d", err);
-  fail_unless (test1 == 165 && test2 == 3,
+  ck_assert_msg (test1 == 165 && test2 == 3,
 	       "The encodeUnsignedInteger function doesn't work correctly");
 
-  fail_unless (testStream.context.bitPointer == 0,
+  ck_assert_msg (testStream.context.bitPointer == 0,
     	       "The encodeUnsignedInteger function did not move the bit Pointer of the stream correctly");
-  fail_unless (testStream.context.bufferIndx == 2,
+  ck_assert_msg (testStream.context.bufferIndx == 2,
       	       "The encodeUnsignedInteger function did not move the byte Pointer of the stream correctly");
 
   buf[0] = (char) 0x10;	/* 0b00010000 */
@@ -764,13 +764,13 @@ START_TEST (test_encodeUnsignedInteger)
   test1 = (unsigned char) buf[0];
   test2 = (unsigned char) buf[1];
 
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
      "encodeUnsignedInteger returns error code %d", err);
-  fail_unless (test1 == 0 && test2 == 0,
+  ck_assert_msg (test1 == 0 && test2 == 0,
      "The encodeUnsignedInteger function doesn't work correctly");
-  fail_unless (testStream.context.bitPointer == 0,
+  ck_assert_msg (testStream.context.bitPointer == 0,
      "The encodeUnsignedInteger function did not move the bit Pointer of the stream correctly");
-  fail_unless (testStream.context.bufferIndx == 1,
+  ck_assert_msg (testStream.context.bufferIndx == 1,
      "The encodeUnsignedInteger function did not move the byte Pointer of the stream correctly");
 }
 END_TEST
@@ -805,15 +805,15 @@ START_TEST (test_encodeString)
 
   str_len = buf[0];
 
-  fail_unless (err == EXIP_OK,
+  ck_assert_msg (err == EXIP_OK,
 	       "encodeString returns error code %d", err);
-  fail_unless (str_len == 19,
+  ck_assert_msg (str_len == 19,
 	       "The String length is not encoded correctly");
-  fail_unless (buf[1] == 'T' && buf[2] == 'E',
+  ck_assert_msg (buf[1] == 'T' && buf[2] == 'E',
   	       "encodeString doesn't encode correctly");
-  fail_unless (testStream.context.bitPointer == 0,
+  ck_assert_msg (testStream.context.bitPointer == 0,
     	       "The encodeString function did not move the bit Pointer of the stream correctly");
-  fail_unless (testStream.context.bufferIndx == 20,
+  ck_assert_msg (testStream.context.bufferIndx == 20,
       	       "The encodeString function did not move the byte Pointer of the stream correctly");
 
 }
@@ -845,19 +845,19 @@ START_TEST (test_encodeBinary)
 
 	err = encodeBinary(&testStream, bin_data, 5);
 
-	fail_unless (err == EXIP_OK,
+	ck_assert_msg (err == EXIP_OK,
 		   "encodeBinary returns error code %d", err);
-	fail_unless (testStream.context.bitPointer == 0,
+	ck_assert_msg (testStream.context.bitPointer == 0,
 			   "The encodeBinary function did not move the bit Pointer of the stream correctly");
-	fail_unless (testStream.context.bufferIndx == 6,
+	ck_assert_msg (testStream.context.bufferIndx == 6,
 			   "The encodeBinary function did not move the byte Pointer of the stream correctly");
 
-	fail_unless(testStream.buffer.buf[0] == 5, "Incorrect encoding during encodeBinary 1");
-	fail_unless(testStream.buffer.buf[1] == (signed char) 0x22, "Incorrect encoding during encodeBinary 2");
-	fail_unless(testStream.buffer.buf[2] == (signed char) 0x65, "Incorrect encoding during encodeBinary 3");
-	fail_unless(testStream.buffer.buf[3] == (signed char) 0xD4, "Incorrect encoding during encodeBinary 4");
-	fail_unless(testStream.buffer.buf[4] == (signed char) 0x5A, "Incorrect encoding during encodeBinary 5");
-	fail_unless(testStream.buffer.buf[5] == (signed char) 0xD7, "Incorrect encoding during encodeBinary 6");
+	ck_assert_msg(testStream.buffer.buf[0] == 5, "Incorrect encoding during encodeBinary 1");
+	ck_assert_msg(testStream.buffer.buf[1] == (signed char) 0x22, "Incorrect encoding during encodeBinary 2");
+	ck_assert_msg(testStream.buffer.buf[2] == (signed char) 0x65, "Incorrect encoding during encodeBinary 3");
+	ck_assert_msg(testStream.buffer.buf[3] == (signed char) 0xD4, "Incorrect encoding during encodeBinary 4");
+	ck_assert_msg(testStream.buffer.buf[4] == (signed char) 0x5A, "Incorrect encoding during encodeBinary 5");
+	ck_assert_msg(testStream.buffer.buf[5] == (signed char) 0xD7, "Incorrect encoding during encodeBinary 6");
 }
 END_TEST
 
@@ -887,12 +887,12 @@ START_TEST (test_encodeFloatValue)
 
 	err = encodeFloatValue(&testStream, test_val);
 
-	fail_unless (err == EXIP_OK,
+	ck_assert_msg (err == EXIP_OK,
 		   "encodeFloatValue returns error code %d", err);
 
-	fail_unless (testStream.context.bitPointer == 2,
+	ck_assert_msg (testStream.context.bitPointer == 2,
 			   "The encodeFloatValue function did not move the bit Pointer of the stream correctly");
-	fail_unless (testStream.context.bufferIndx == 2,
+	ck_assert_msg (testStream.context.bufferIndx == 2,
 			   "The encodeFloatValue function did not move the byte Pointer of the stream correctly");
 
 	testStream.context.bitPointer = 0;
@@ -902,7 +902,7 @@ START_TEST (test_encodeFloatValue)
 	test_dec.exponent = 0;
 	err = decodeFloatValue(&testStream, &test_dec);
 
-	fail_unless(test_val.exponent == test_dec.exponent && test_val.mantissa == test_dec.mantissa
+	ck_assert_msg(test_val.exponent == test_dec.exponent && test_val.mantissa == test_dec.mantissa
 			, "Incorrect encoding of float value");
 
 }
@@ -929,11 +929,11 @@ START_TEST (test_encodeIntegerValue)
 
 	err = encodeIntegerValue(&testStream, -913);
 
-	fail_unless (err == EXIP_OK,
+	ck_assert_msg (err == EXIP_OK,
 		   "encodeIntegerValue returns error code %d", err);
-	fail_unless (testStream.context.bitPointer == 1,
+	ck_assert_msg (testStream.context.bitPointer == 1,
 			   "The encodeIntegerValue function did not move the bit Pointer of the stream correctly");
-	fail_unless (testStream.context.bufferIndx == 2,
+	ck_assert_msg (testStream.context.bufferIndx == 2,
 			   "The encodeIntegerValue function did not move the byte Pointer of the stream correctly");
 
 	testStream.context.bitPointer = 0;
@@ -941,7 +941,7 @@ START_TEST (test_encodeIntegerValue)
 
 	err = decodeIntegerValue(&testStream, &test_dec);
 
-	fail_unless (test_dec == -913,
+	ck_assert_msg (test_dec == -913,
 			   "The encodeIntegerValue encodes correctly");
 }
 END_TEST
@@ -974,12 +974,12 @@ START_TEST (test_encodeDecimalValue)
 
 	err = encodeDecimalValue(&testStream, res);
 
-	fail_unless (err == EXIP_OK,
+	ck_assert_msg (err == EXIP_OK,
 		   "encodeDecimalValue returns error code %d", err);
 
-	fail_unless (testStream.context.bitPointer == 1,
+	ck_assert_msg (testStream.context.bitPointer == 1,
 			   "The encodeDecimalValue function did not move the bit Pointer of the stream correctly");
-	fail_unless (testStream.context.bufferIndx == 2,
+	ck_assert_msg (testStream.context.bufferIndx == 2,
 			   "The encodeDecimalValue function did not move the byte Pointer of the stream correctly");
 
 	testStream.context.bitPointer = 0;
@@ -987,7 +987,7 @@ START_TEST (test_encodeDecimalValue)
 
 	err = decodeDecimalValue(&testStream, &dec_val);
 
-	fail_unless (res.mantissa == dec_val.mantissa && res.exponent == dec_val.exponent, "The value 5.001 is decoded as %d*10^%d", dec_val.mantissa, dec_val.exponent);
+	ck_assert_msg (res.mantissa == dec_val.mantissa && res.exponent == dec_val.exponent, "The value 5.001 is decoded as %d*10^%d", dec_val.mantissa, dec_val.exponent);
 
 }
 END_TEST
@@ -1004,41 +1004,41 @@ START_TEST (test_moveBitPointer)
 	strm.context.bitPointer = 3;
 	strm.context.bufferIndx = 0;
 	moveBitPointer(&strm, 13);
-	fail_unless(strm.context.bitPointer == 0 && strm.context.bufferIndx == 2, "incorrect moving of the BitPointer");
+	ck_assert_msg(strm.context.bitPointer == 0 && strm.context.bufferIndx == 2, "incorrect moving of the BitPointer");
 
 	strm.context.bitPointer = 7;
 	strm.context.bufferIndx = 0;
 	moveBitPointer(&strm, 1);
-	fail_unless(strm.context.bitPointer == 0 && strm.context.bufferIndx == 1, "incorrect moving of the BitPointer");
+	ck_assert_msg(strm.context.bitPointer == 0 && strm.context.bufferIndx == 1, "incorrect moving of the BitPointer");
 
 	strm.context.bitPointer = 3;
 	strm.context.bufferIndx = 0;
 	moveBitPointer(&strm, 12);
-	fail_unless(strm.context.bitPointer == 7 && strm.context.bufferIndx == 1, "incorrect moving of the BitPointer");
+	ck_assert_msg(strm.context.bitPointer == 7 && strm.context.bufferIndx == 1, "incorrect moving of the BitPointer");
 }
 END_TEST
 
 START_TEST (test_getBitsNumber)
 {
-	fail_unless(getBitsNumber(99) == 7);
-	fail_unless(getBitsNumber(63) == 6);
-	fail_unless(getBitsNumber(64) == 7);
-	fail_unless(getBitsNumber(4095) == 12);
-	fail_unless(getBitsNumber(824) == 10);
-	fail_unless(getBitsNumber(16383) == 14);
-	fail_unless(getBitsNumber(7234) == 13);
+	ck_assert(getBitsNumber(99) == 7);
+	ck_assert(getBitsNumber(63) == 6);
+	ck_assert(getBitsNumber(64) == 7);
+	ck_assert(getBitsNumber(4095) == 12);
+	ck_assert(getBitsNumber(824) == 10);
+	ck_assert(getBitsNumber(16383) == 14);
+	ck_assert(getBitsNumber(7234) == 13);
 }
 END_TEST
 
 START_TEST (test_log2INT)
 {
-	fail_unless(log2INT(99) == 6);
-	fail_unless(log2INT(63) == 5);
-	fail_unless(log2INT(64) == 6);
-	fail_unless(log2INT(4095) == 11);
-	fail_unless(log2INT(824) == 9);
-	fail_unless(log2INT(16383) == 13);
-	fail_unless(log2INT(7234) == 12);
+	ck_assert(log2INT(99) == 6);
+	ck_assert(log2INT(63) == 5);
+	ck_assert(log2INT(64) == 6);
+	ck_assert(log2INT(4095) == 11);
+	ck_assert(log2INT(824) == 9);
+	ck_assert(log2INT(16383) == 13);
+	ck_assert(log2INT(7234) == 12);
 }
 END_TEST
 

@@ -45,14 +45,14 @@ START_TEST (test_decodeHeader)
 	makeDefaultOpts(&testStream.header.opts);
 
 	err = decodeHeader(&testStream, TRUE);
-	fail_unless (err == EXIP_OK, "decodeHeader returns error code %d", err);
-	fail_unless (testStream.header.has_cookie == 0,
+	ck_assert_msg (err == EXIP_OK, "decodeHeader returns error code %d", err);
+	ck_assert_msg (testStream.header.has_cookie == 0,
 				"decodeHeader founds EXI cookie");
-	fail_unless (testStream.header.has_options == 0,
+	ck_assert_msg (testStream.header.has_options == 0,
 					"decodeHeader founds options");
-	fail_unless (testStream.header.is_preview_version == 0,
+	ck_assert_msg (testStream.header.is_preview_version == 0,
 					"decodeHeader founds preview version");
-	fail_unless (testStream.header.version_number == 1,
+	ck_assert_msg (testStream.header.version_number == 1,
 					"decodeHeader does not recognize version 1 of the stream");
 
 	testStream2.context.bitPointer = 0;
@@ -73,14 +73,14 @@ START_TEST (test_decodeHeader)
 	testStream2.buffer.ioStrm.stream = NULL;
 
 	err = decodeHeader(&testStream2, TRUE);
-	fail_unless (err == EXIP_OK, "decodeHeader returns error code %d", err);
-	fail_unless (testStream2.header.has_cookie == 1,
+	ck_assert_msg (err == EXIP_OK, "decodeHeader returns error code %d", err);
+	ck_assert_msg (testStream2.header.has_cookie == 1,
 				"decodeHeader does not found EXI cookie");
-	fail_unless (testStream2.header.has_options == 0,
+	ck_assert_msg (testStream2.header.has_options == 0,
 					"decodeHeader founds options");
-	fail_unless (testStream2.header.is_preview_version == 0,
+	ck_assert_msg (testStream2.header.is_preview_version == 0,
 					"decodeHeader founds preview version");
-	fail_unless (testStream2.header.version_number == 1,
+	ck_assert_msg (testStream2.header.version_number == 1,
 					"decodeHeader does not recognize version 1 of the stream");
 }
 END_TEST

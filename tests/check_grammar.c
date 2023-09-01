@@ -47,7 +47,7 @@ START_TEST (test_createDocGrammar)
 
 	err = createDocGrammar(&schema, NULL, 0);
 
-	fail_unless (err == EXIP_OK, "createDocGrammar returns an error code %d", err);
+	ck_assert_msg (err == EXIP_OK, "createDocGrammar returns an error code %d", err);
 
 	freeAllocList(&schema.memList);
 }
@@ -66,14 +66,14 @@ START_TEST (test_processNextProduction)
 	initAllocList(&schema.memList);
 
 	err = createDocGrammar(&schema, NULL, 0);
-	fail_unless (err == EXIP_OK, "createDocGrammar returns an error code %d", err);
+	ck_assert_msg (err == EXIP_OK, "createDocGrammar returns an error code %d", err);
 
 	err = pushGrammar(&strm.gStack, emptyQnameID, &schema.docGrammar);
-	fail_unless (err == EXIP_OK, "pushGrammar returns an error code %d", err);
+	ck_assert_msg (err == EXIP_OK, "pushGrammar returns an error code %d", err);
 
 	strm.gStack->currNonTermID = 4;
 	err = processNextProduction(&strm, &nonTermID_out, &handler, NULL);
-	fail_unless (err == EXIP_INCONSISTENT_PROC_STATE, "processNextProduction does not return the correct error code");
+	ck_assert_msg (err == EXIP_INCONSISTENT_PROC_STATE, "processNextProduction does not return the correct error code");
 
 	freeAllocList(&strm.memList);
 	freeAllocList(&schema.memList);
@@ -101,11 +101,11 @@ START_TEST (test_pushGrammar)
 #endif
 
 	err = pushGrammar(&testGrStack, emptyQnameID, &testElementGrammar1);
-	fail_unless (err == EXIP_OK, "pushGrammar returns error code %d", err);
+	ck_assert_msg (err == EXIP_OK, "pushGrammar returns error code %d", err);
 	fail_if(testGrStack->nextInStack != NULL);
 
 	err = pushGrammar(&testGrStack, emptyQnameID, &testElementGrammar);
-	fail_unless (err == EXIP_OK, "pushGrammar returns error code %d", err);
+	ck_assert_msg (err == EXIP_OK, "pushGrammar returns error code %d", err);
 	fail_if(testGrStack->nextInStack == NULL);
 	fail_if(testGrStack->nextInStack->grammar != &testElementGrammar1);
 
@@ -134,10 +134,10 @@ START_TEST (test_popGrammar)
 #endif
 
 	err = pushGrammar(&testGrStack, emptyQnameID, &testElementGrammar1);
-	fail_unless (err == EXIP_OK, "pushGrammar returns error code %d", err);
+	ck_assert_msg (err == EXIP_OK, "pushGrammar returns error code %d", err);
 
 	err = pushGrammar(&testGrStack, emptyQnameID, &testElementGrammar);
-	fail_unless (err == EXIP_OK, "pushGrammar returns error code %d", err);
+	ck_assert_msg (err == EXIP_OK, "pushGrammar returns error code %d", err);
 	fail_if(testGrStack->nextInStack == NULL);
 
 	popGrammar(&testGrStack);
@@ -156,7 +156,7 @@ START_TEST (test_createBuiltInElementGrammar)
 	initAllocList(&strm.memList);
 
 	err = createBuiltInElementGrammar(&testElementGrammar, &strm);
-	fail_unless (err == EXIP_OK, "createBuildInElementGrammar returns error code %d", err);
+	ck_assert_msg (err == EXIP_OK, "createBuildInElementGrammar returns error code %d", err);
 
 }
 END_TEST
@@ -185,8 +185,8 @@ START_TEST (test_insertZeroProduction)
 	rule.production = prod0Arr;
 
 	tmp_err_code = insertZeroProduction(&rule, EVENT_CH, 5, &qname, FALSE);
-	fail_unless (tmp_err_code == EXIP_OK, "insertZeroProduction returns an error code %d", tmp_err_code);
-	fail_unless (rule.pCount == 1);
+	ck_assert_msg (tmp_err_code == EXIP_OK, "insertZeroProduction returns an error code %d", tmp_err_code);
+	ck_assert (rule.pCount == 1);
 }
 END_TEST
 #endif

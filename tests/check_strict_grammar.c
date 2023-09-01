@@ -71,7 +71,7 @@ static void parseSchema(const char* fileName, EXIPSchema* schema)
 	schemaFile = fopen(exipath, "rb" );
 	if(!schemaFile)
 	{
-		fail("Unable to open file %s", exipath);
+		ck_abort_msg("Unable to open file %s", exipath);
 	}
 	else
 	{
@@ -85,7 +85,7 @@ static void parseSchema(const char* fileName, EXIPSchema* schema)
 		if (!buffer.buf)
 		{
 			fclose(schemaFile);
-			fail("Memory allocation error!");
+			ck_abort_msg("Memory allocation error!");
 		}
 
 		//Read file contents into buffer
@@ -101,7 +101,7 @@ static void parseSchema(const char* fileName, EXIPSchema* schema)
 
 		if(tmp_err_code != EXIP_OK)
 		{
-			fail("\n Error reading schema: %d", tmp_err_code);
+			ck_abort_msg("\n Error reading schema: %d", tmp_err_code);
 		}
 
 		free(buffer.buf);
@@ -300,20 +300,20 @@ START_TEST (test_acceptance_for_A_01)
 	
 	infile = fopen(exipath, "rb" );
 	if(!infile)
-		fail("Unable to open file %s", exipath);
+		ck_abort_msg("Unable to open file %s", exipath);
 	
 	buffer.ioStrm.readWriteToStream = readFileInputStream;
 	buffer.ioStrm.stream = infile;
 
 	// II: Second, initialize the parser object
 	tmp_err_code = initParser(&testParser, buffer, &parsingData);
-	fail_unless (tmp_err_code == EXIP_OK, "initParser returns an error code %d", tmp_err_code);
+	ck_assert_msg (tmp_err_code == EXIP_OK, "initParser returns an error code %d", tmp_err_code);
 
 	// III: Initialize the parsing data and hook the callback handlers to the parser object
 	parsingData.eventCount = 0;
 	parsingData.expectAttributeData = 0;
 	if (EXIP_OK != initAllocList(&parsingData.allocList))
-		fail("Memory allocation error!");
+		ck_abort_msg("Memory allocation error!");
 
 
 	testParser.handler.fatalError    = sample_fatalError;
@@ -330,83 +330,83 @@ START_TEST (test_acceptance_for_A_01)
 	
 	// IV: Parse the header of the stream
 	tmp_err_code = parseHeader(&testParser, FALSE);
-	fail_unless (tmp_err_code == EXIP_OK, "parsing the header returns an error code %d", tmp_err_code);
+	ck_assert_msg (tmp_err_code == EXIP_OK, "parsing the header returns an error code %d", tmp_err_code);
 
 	tmp_err_code = setSchema(&testParser,  &schema);
-	fail_unless (tmp_err_code == EXIP_OK, "setSchema() returns an error code %d", tmp_err_code);
+	ck_assert_msg (tmp_err_code == EXIP_OK, "setSchema() returns an error code %d", tmp_err_code);
 	// V: Parse the body of the EXI stream
 	while(tmp_err_code == EXIP_OK)
 	{
 		switch (parsingData.eventCount)
 		{
 			case 0:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "SD"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "SD"));
 				break;
 			case 1:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "SE"));
-				fail_unless(stringEqualToAscii(parsingData.uri, "urn:foo"));
-				fail_unless(stringEqualToAscii(parsingData.localName, "A"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "SE"));
+				ck_assert(stringEqualToAscii(parsingData.uri, "urn:foo"));
+				ck_assert(stringEqualToAscii(parsingData.localName, "A"));
 				break;
 			case 2:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "SE"));
-				fail_unless(stringEqualToAscii(parsingData.uri, "urn:foo"));
-				fail_unless(stringEqualToAscii(parsingData.localName, "AB"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "SE"));
+				ck_assert(stringEqualToAscii(parsingData.uri, "urn:foo"));
+				ck_assert(stringEqualToAscii(parsingData.localName, "AB"));
 				break;
 			case 3:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "CH"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "CH"));
 				break;
 			case 4:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "EE"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "EE"));
 				break;
 			case 5:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "SE"));
-				fail_unless(stringEqualToAscii(parsingData.uri, "urn:foo"));
-				fail_unless(stringEqualToAscii(parsingData.localName, "AC"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "SE"));
+				ck_assert(stringEqualToAscii(parsingData.uri, "urn:foo"));
+				ck_assert(stringEqualToAscii(parsingData.localName, "AC"));
 				break;
 			case 6:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "CH"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "CH"));
 				break;
 			case 7:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "EE"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "EE"));
 				break;
 			case 8:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "SE"));
-				fail_unless(stringEqualToAscii(parsingData.uri, "urn:foo"));
-				fail_unless(stringEqualToAscii(parsingData.localName, "AC"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "SE"));
+				ck_assert(stringEqualToAscii(parsingData.uri, "urn:foo"));
+				ck_assert(stringEqualToAscii(parsingData.localName, "AC"));
 				break;
 			case 9:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "CH"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "CH"));
 				break;
 			case 10:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "EE"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "EE"));
 				break;
 			case 11:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "SE"));
-				fail_unless(stringEqualToAscii(parsingData.uri, "urn:foo"));
-				fail_unless(stringEqualToAscii(parsingData.localName, "AD"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "SE"));
+				ck_assert(stringEqualToAscii(parsingData.uri, "urn:foo"));
+				ck_assert(stringEqualToAscii(parsingData.localName, "AD"));
 				break;
 			case 12:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "CH"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "CH"));
 				break;
 			case 13:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "EE"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "EE"));
 				break;
 			case 14:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "SE"));
-				fail_unless(stringEqualToAscii(parsingData.uri, "urn:foo"));
-				fail_unless(stringEqualToAscii(parsingData.localName, "AE"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "SE"));
+				ck_assert(stringEqualToAscii(parsingData.uri, "urn:foo"));
+				ck_assert(stringEqualToAscii(parsingData.localName, "AE"));
 				break;
 			case 15:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "CH"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "CH"));
 				break;
 			case 16:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "EE"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "EE"));
 				break;
 			case 17:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "EE"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "EE"));
 				break;
 			case 18:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "ED"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "ED"));
 				break;
 			default:
 				// Unexpected event count caught below.
@@ -418,16 +418,16 @@ START_TEST (test_acceptance_for_A_01)
 				
 	}
 	
-	fail_unless(stringEqualToAscii(parsingData.eventCode, "ED"));
+	ck_assert(stringEqualToAscii(parsingData.eventCode, "ED"));
 
-	fail_unless(parsingData.eventCount == 18,
+	ck_assert_msg(parsingData.eventCount == 18,
 	            "Unexpected event count: %u", parsingData.eventCount);
 
 	// VI: Free the memory allocated by the parser object
 	freeAllocList(&parsingData.allocList);
 	destroyParser(&testParser);
 	fclose(infile);
-	fail_unless (tmp_err_code == EXIP_PARSING_COMPLETE, "Error during parsing of the EXI body %d", tmp_err_code);
+	ck_assert_msg (tmp_err_code == EXIP_PARSING_COMPLETE, "Error during parsing of the EXI body %d", tmp_err_code);
 }
 END_TEST
 
@@ -463,20 +463,20 @@ START_TEST (test_acceptance_for_A_01_exip1)
 	
 	infile = fopen(exipath, "rb" );
 	if(!infile)
-		fail("Unable to open file %s", exipath);
+		ck_abort_msg("Unable to open file %s", exipath);
 	
 	buffer.ioStrm.readWriteToStream = readFileInputStream;
 	buffer.ioStrm.stream = infile;
 
 	// II: Second, initialize the parser object
 	tmp_err_code = initParser(&testParser, buffer, &parsingData);
-	fail_unless (tmp_err_code == EXIP_OK, "initParser returns an error code %d", tmp_err_code);
+	ck_assert_msg (tmp_err_code == EXIP_OK, "initParser returns an error code %d", tmp_err_code);
 
 	// III: Initialize the parsing data and hook the callback handlers to the parser object
 	parsingData.eventCount = 0;
 	parsingData.expectAttributeData = 0;
 	if (EXIP_OK != initAllocList(&parsingData.allocList))
-		fail("Memory allocation error!");
+		ck_abort_msg("Memory allocation error!");
 
 	testParser.handler.fatalError    = sample_fatalError;
 	testParser.handler.error         = sample_fatalError;
@@ -492,10 +492,10 @@ START_TEST (test_acceptance_for_A_01_exip1)
 	
 	// IV: Parse the header of the stream
 	tmp_err_code = parseHeader(&testParser, FALSE);
-	fail_unless (tmp_err_code == EXIP_OK, "parsing the header returns an error code %d", tmp_err_code);
+	ck_assert_msg (tmp_err_code == EXIP_OK, "parsing the header returns an error code %d", tmp_err_code);
 
 	tmp_err_code = setSchema(&testParser, &schema);
-	fail_unless (tmp_err_code == EXIP_OK, "setSchema() returns an error code %d", tmp_err_code);
+	ck_assert_msg (tmp_err_code == EXIP_OK, "setSchema() returns an error code %d", tmp_err_code);
 
 	// V: Parse the body of the EXI stream
 	while(tmp_err_code == EXIP_OK)
@@ -503,21 +503,21 @@ START_TEST (test_acceptance_for_A_01_exip1)
 		switch (parsingData.eventCount)
 		{
 			case 0:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "SD"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "SD"));
 				break;
 			case 1:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "SE"));
-				fail_unless(stringEqualToAscii(parsingData.uri, "urn:foo"));
-				fail_unless(stringEqualToAscii(parsingData.localName, "AB"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "SE"));
+				ck_assert(stringEqualToAscii(parsingData.uri, "urn:foo"));
+				ck_assert(stringEqualToAscii(parsingData.localName, "AB"));
 				break;
 			case 2:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "CH"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "CH"));
 				break;
 			case 3:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "EE"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "EE"));
 				break;
 			case 4:
-				fail_unless(stringEqualToAscii(parsingData.eventCode, "ED"));
+				ck_assert(stringEqualToAscii(parsingData.eventCode, "ED"));
 				break;
 			default:
 				// Unexpected event count caught below.
@@ -528,16 +528,16 @@ START_TEST (test_acceptance_for_A_01_exip1)
 		parsingData.eventCount++;
 	}
 	
-	fail_unless(stringEqualToAscii(parsingData.eventCode, "ED"));
+	ck_assert(stringEqualToAscii(parsingData.eventCode, "ED"));
 
-	fail_unless(parsingData.eventCount == 4,
+	ck_assert_msg(parsingData.eventCount == 4,
 	            "Unexpected event count: %u", parsingData.eventCount);
 
 	// VI: Free the memory allocated by the parser object
 	freeAllocList(&parsingData.allocList);
 	destroyParser(&testParser);
 	fclose(infile);
-	fail_unless (tmp_err_code == EXIP_PARSING_COMPLETE, "Error during parsing of the EXI body %d", tmp_err_code);
+	ck_assert_msg (tmp_err_code == EXIP_PARSING_COMPLETE, "Error during parsing of the EXI body %d", tmp_err_code);
 }
 END_TEST
 
@@ -594,7 +594,7 @@ START_TEST (test_acceptance_for_A_01b)
 
 	// IV: Initialize the stream
 	tmp_err_code = serialize.initStream(&testStrm, buffer, &schema);
-	fail_unless (tmp_err_code == EXIP_OK, "initStream returns an error code %d", tmp_err_code);
+	ck_assert_msg (tmp_err_code == EXIP_OK, "initStream returns an error code %d", tmp_err_code);
 
 	// V: Start building the stream step by step: header, document, element etc...
 	tmp_err_code += serialize.exiHeader(&testStrm);
@@ -604,28 +604,28 @@ START_TEST (test_acceptance_for_A_01b)
 	qname.uri = &NS_STR;
 	qname.localName = &ELEM_A;
 	tmp_err_code += serialize.startElement(&testStrm, qname, &valueType);
-	fail_unless (tmp_err_code == EXIP_OK, "serialization returns an error code %d", tmp_err_code);
+	ck_assert_msg (tmp_err_code == EXIP_OK, "serialization returns an error code %d", tmp_err_code);
 
 	qname.localName = &ELEM_AB;
 	tmp_err_code += serialize.startElement(&testStrm, qname, &valueType);
 	tmp_err_code += serialize.stringData(&testStrm, CH);
 	tmp_err_code += serialize.endElement(&testStrm);
-	fail_unless (tmp_err_code == EXIP_OK, "serialization returns an error code %d", tmp_err_code);
+	ck_assert_msg (tmp_err_code == EXIP_OK, "serialization returns an error code %d", tmp_err_code);
 
 	qname.localName = &ELEM_AC;
 	tmp_err_code += serialize.startElement(&testStrm, qname, &valueType);
 	tmp_err_code += serialize.stringData(&testStrm, CH);
 	tmp_err_code += serialize.endElement(&testStrm);
-	fail_unless (tmp_err_code == EXIP_OK, "serialization returns an error code %d", tmp_err_code);
+	ck_assert_msg (tmp_err_code == EXIP_OK, "serialization returns an error code %d", tmp_err_code);
 	
 	tmp_err_code += serialize.startElement(&testStrm, qname, &valueType);
 	tmp_err_code += serialize.stringData(&testStrm, CH);
 	tmp_err_code += serialize.endElement(&testStrm);
-	fail_unless (tmp_err_code == EXIP_OK, "serialization returns an error code %d", tmp_err_code);
+	ck_assert_msg (tmp_err_code == EXIP_OK, "serialization returns an error code %d", tmp_err_code);
 	
 	/* Expect failure when start third AC element */
 	tmp_err_code += serialize.startElement(&testStrm, qname, &valueType);
-	fail_unless (tmp_err_code == EXIP_INCONSISTENT_PROC_STATE, 
+	ck_assert_msg (tmp_err_code == EXIP_INCONSISTENT_PROC_STATE, 
 	    "Expected EXIP_INCONSISTENT_PROC_STATE, but returns an error code %d", tmp_err_code);
 
 	// VI: Free the memory allocated by the EXI stream object
@@ -1440,8 +1440,8 @@ START_TEST (test_lkab_demo_suit)
 
 	err = serializeIOMsg(lkab_buf, LKAB_BUFFER_SIZE, &msg_size, bVal);
 
-	fail_unless (err == EXIP_OK, "Error during serialization of IO Msg %d", err);
-	fail_if(msg_size == 0, "0 Length message size");
+	ck_assert_msg (err == EXIP_OK, "Error during serialization of IO Msg %d", err);
+	ck_assert_msg (msg_size != 0, "0 Length message size");
 
 	bVal.ts.hour = 10;
 	bVal.ts.mday = 30;
@@ -1455,12 +1455,12 @@ START_TEST (test_lkab_demo_suit)
 
 	err = parseIOMsg(lkab_buf, LKAB_BUFFER_SIZE, &bVal);
 
-	fail_unless (err == EXIP_OK, "Error during parsing of IO Msg %d", err);
-	fail_unless (bVal.quality == Good, "quality not correct");
-	fail_unless (bVal.val == 1, "value not correct");
-	fail_unless (bVal.ts.min == 10, "min not correct");
-	fail_unless (bVal.ts.sec == 10, "sec not correct");
-	fail_unless (bVal.ts.msec == 115, "msec not correct");
+	ck_assert_msg (err == EXIP_OK, "Error during parsing of IO Msg %d", err);
+	ck_assert_msg (bVal.quality == Good, "quality not correct");
+	ck_assert_msg (bVal.val == 1, "value not correct");
+	ck_assert_msg (bVal.ts.min == 10, "min not correct");
+	ck_assert_msg (bVal.ts.sec == 10, "sec not correct");
+	ck_assert_msg (bVal.ts.msec == 115, "msec not correct");
 
 	strcpy(devD.id, "AirPS");
 	strcpy(devD.location, "Grate Support Shaft");
@@ -1473,8 +1473,8 @@ START_TEST (test_lkab_demo_suit)
 
 	err = serializeDevDescMsg(lkab_buf, LKAB_BUFFER_SIZE, &msg_size, devD);
 
-	fail_unless (err == EXIP_OK, "Error during serialization of DevDesc Msg %d", err);
-	fail_if(msg_size == 0, "0 Length message size");
+	ck_assert_msg (err == EXIP_OK, "Error during serialization of DevDesc Msg %d", err);
+	ck_assert_msg (msg_size != 0, "0 Length message size");
 
 	strcpy(devD.id, "00000000000");
 	strcpy(devD.location, "00000000000");
@@ -1487,15 +1487,15 @@ START_TEST (test_lkab_demo_suit)
 
 	err = parseDevDescMsg(lkab_buf, LKAB_BUFFER_SIZE, &devD);
 
-	fail_unless (err == EXIP_OK, "Error during parsing of DevDesc Msg %d", err);
-	fail_unless (devD.processValue.isReadOnly == 0, "isReadOnly not correct");
-	fail_unless (devD.processValue.type == Bool, "type not correct");
-	fail_unless (strcmp(devD.id, "AirPS") == 0, "id not correct");
-	fail_unless (strcmp(devD.location, "Grate Support Shaft") == 0, "location not correct");
-	fail_unless (strcmp(devD.name, "Pressure switch") == 0, "name not correct");
-	fail_unless (strcmp(devD.type, "Air pressure switch") == 0, "type not correct");
-	fail_unless (strcmp(devD.processValue.description, "This is an Air pressure switch ON/OFF value") == 0, "description not correct");
-	fail_unless (strcmp(devD.processValue.name, "Air pressure switch ON/OFF") == 0, "name not correct");
+	ck_assert_msg (err == EXIP_OK, "Error during parsing of DevDesc Msg %d", err);
+	ck_assert_msg (devD.processValue.isReadOnly == 0, "isReadOnly not correct");
+	ck_assert_msg (devD.processValue.type == Bool, "type not correct");
+	ck_assert_msg (strcmp(devD.id, "AirPS") == 0, "id not correct");
+	ck_assert_msg (strcmp(devD.location, "Grate Support Shaft") == 0, "location not correct");
+	ck_assert_msg (strcmp(devD.name, "Pressure switch") == 0, "name not correct");
+	ck_assert_msg (strcmp(devD.type, "Air pressure switch") == 0, "type not correct");
+	ck_assert_msg (strcmp(devD.processValue.description, "This is an Air pressure switch ON/OFF value") == 0, "description not correct");
+	ck_assert_msg (strcmp(devD.processValue.name, "Air pressure switch ON/OFF") == 0, "name not correct");
 }
 END_TEST
 /**********************************************************************/

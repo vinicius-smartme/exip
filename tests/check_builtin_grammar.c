@@ -92,14 +92,14 @@ START_TEST (test_decode_ant_example01)
 	
 	infile = fopen(exipath, "rb" );
 	if(!infile)
-		fail("Unable to open file %s", exipath);
+		ck_abort_msg("Unable to open file %s", exipath);
 	
 	buffer.ioStrm.readWriteToStream = readFileInputStream;
 	buffer.ioStrm.stream = infile;
 
 	// II: Second, initialize the parser object
 	tmp_err_code = initParser(&testParser, buffer, &parsingData);
-	fail_unless (tmp_err_code == EXIP_OK, "initParser returns an error code %d", tmp_err_code);
+	ck_assert_msg (tmp_err_code == EXIP_OK, "initParser returns an error code %d", tmp_err_code);
 
 	// III: Initialize the parsing data and hook the callback handlers to the parser object
 	parsingData.eventCount = 0;
@@ -111,11 +111,11 @@ START_TEST (test_decode_ant_example01)
 
 	// IV: Parse the header of the stream
 	tmp_err_code = parseHeader(&testParser, TRUE);
-	fail_unless (tmp_err_code == EXIP_OK, "parsing the header returns an error code %d", tmp_err_code);
+	ck_assert_msg (tmp_err_code == EXIP_OK, "parsing the header returns an error code %d", tmp_err_code);
 	parsingData.eventCount++; // SD event is implicit
 
 	tmp_err_code = setSchema(&testParser, NULL);
-	fail_unless (tmp_err_code == EXIP_OK, "setSchema() returns an error code %d", tmp_err_code);
+	ck_assert_msg (tmp_err_code == EXIP_OK, "setSchema() returns an error code %d", tmp_err_code);
 
 	// V: Parse the body of the EXI stream
 	while(tmp_err_code == EXIP_OK)
@@ -124,15 +124,15 @@ START_TEST (test_decode_ant_example01)
 		parsingData.eventCount++;
 	}
 	
-	fail_unless(parsingData.eventCount == 401, 
+	ck_assert_msg(parsingData.eventCount == 401, 
 	            "Unexpected event count: %u", parsingData.eventCount);
-	fail_unless(parsingData.attributeCount == 171, 
+	ck_assert_msg(parsingData.attributeCount == 171, 
 	            "Unexpected attribute count: %u", parsingData.attributeCount);
 
 	// VI: Free the memory allocated by the parser object
 	destroyParser(&testParser);
 	fclose(infile);
-	fail_unless (tmp_err_code == EXIP_PARSING_COMPLETE, "Error during parsing of the EXI body %d", tmp_err_code);
+	ck_assert_msg (tmp_err_code == EXIP_PARSING_COMPLETE, "Error during parsing of the EXI body %d", tmp_err_code);
 }
 END_TEST
 

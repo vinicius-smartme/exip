@@ -31,10 +31,10 @@ START_TEST (test_createValueTable)
 
 	err = createValueTable(&valueTable);
 
-	fail_unless (err == EXIP_OK, "createValueTable returns error code %d", err);
-	fail_unless (valueTable.count == 0,
+	ck_assert_msg (err == EXIP_OK, "createValueTable returns error code %d", err);
+	ck_assert_msg (valueTable.count == 0,
 				"createValueTable populates the valueTable with count: %d", valueTable.count);
-	fail_unless (valueTable.dynArray.arrayEntries == DEFAULT_VALUE_ENTRIES_NUMBER,
+	ck_assert_msg (valueTable.dynArray.arrayEntries == DEFAULT_VALUE_ENTRIES_NUMBER,
 					"createValueTable creates dynamic array with %d rows", valueTable.dynArray.arrayEntries);
 	fail_if(valueTable.value == NULL);
 
@@ -49,8 +49,8 @@ START_TEST (test_createPfxTable)
 
 	err = createPfxTable(&pfxTable);
 
-	fail_unless (err == EXIP_OK, "createPfxTable returns error code %d", err);
-	fail_unless (pfxTable->count == 0,
+	ck_assert_msg (err == EXIP_OK, "createPfxTable returns error code %d", err);
+	ck_assert_msg (pfxTable->count == 0,
 				"createPfxTable populates the pfxTable with count: %d", pfxTable->count);
 	fail_if(pfxTable->pfxStr == NULL);
 
@@ -71,14 +71,14 @@ START_TEST (test_addUriEntry)
 
 	err = addUriEntry(&uriTable, test_uri, &entryId);
 
-	fail_unless (err == EXIP_OK, "addUriEntry returns error code %d", err);
-	fail_unless (uriTable.dynArray.arrayEntries == DEFAULT_URI_ENTRIES_NUMBER,
+	ck_assert_msg (err == EXIP_OK, "addUriEntry returns error code %d", err);
+	ck_assert_msg (uriTable.dynArray.arrayEntries == DEFAULT_URI_ENTRIES_NUMBER,
 				"addUriEntry changed the dynArray.arrayEntries unnecessary");
-	fail_unless (uriTable.count == 1,
+	ck_assert_msg (uriTable.count == 1,
 					"addUriEntry did not update count properly");
-	fail_unless (stringEqual(uriTable.uri[0].uriStr, test_uri) == 1,
+	ck_assert_msg (stringEqual(uriTable.uri[0].uriStr, test_uri) == 1,
 						"addUriEntry changed the uriStr");
-	fail_unless (entryId == 0,
+	ck_assert_msg (entryId == 0,
 				"addUriEntry returned wrong entryId: %d", entryId);
 
 	fail_if(uriTable.uri[0].lnTable.ln == NULL);
@@ -87,14 +87,14 @@ START_TEST (test_addUriEntry)
 
 	err = addUriEntry(&uriTable, test_uri, &entryId);
 
-	fail_unless (err == EXIP_OK, "addUriEntry returns error code %d", err);
-	fail_unless (uriTable.dynArray.arrayEntries == DEFAULT_URI_ENTRIES_NUMBER*2,
+	ck_assert_msg (err == EXIP_OK, "addUriEntry returns error code %d", err);
+	ck_assert_msg (uriTable.dynArray.arrayEntries == DEFAULT_URI_ENTRIES_NUMBER*2,
 				"addUriEntry did not update the dynArray.arrayEntries properly");
-	fail_unless (uriTable.count == DEFAULT_URI_ENTRIES_NUMBER + 1,
+	ck_assert_msg (uriTable.count == DEFAULT_URI_ENTRIES_NUMBER + 1,
 					"addUriEntry did not update rowCount properly");
-	fail_unless (stringEqual(uriTable.uri[DEFAULT_URI_ENTRIES_NUMBER].uriStr, test_uri) == 1,
+	ck_assert_msg (stringEqual(uriTable.uri[DEFAULT_URI_ENTRIES_NUMBER].uriStr, test_uri) == 1,
 						"addUriEntry changed the uriStr");
-	fail_unless (entryId == DEFAULT_URI_ENTRIES_NUMBER,
+	ck_assert_msg (entryId == DEFAULT_URI_ENTRIES_NUMBER,
 				"addUriEntry returned wrong entryId: %d", entryId);
 
 	fail_if(uriTable.uri[DEFAULT_URI_ENTRIES_NUMBER].lnTable.ln == NULL);
@@ -115,14 +115,14 @@ START_TEST (test_addLnEntry)
 
 	err = addLnEntry(&lnTable, test_ln, &entryId);
 
-	fail_unless (err == EXIP_OK, "addLnEntry returns error code %d", err);
-	fail_unless (lnTable.dynArray.arrayEntries == DEFAULT_LN_ENTRIES_NUMBER,
+	ck_assert_msg (err == EXIP_OK, "addLnEntry returns error code %d", err);
+	ck_assert_msg (lnTable.dynArray.arrayEntries == DEFAULT_LN_ENTRIES_NUMBER,
 				"addLnEntry changed the dynArray.arrayEntries unnecessary");
-	fail_unless (lnTable.count == 1,
+	ck_assert_msg (lnTable.count == 1,
 					"addLnEntry did not update rowCount properly");
-	fail_unless (stringEqual(lnTable.ln[0].lnStr, test_ln) == 1,
+	ck_assert_msg (stringEqual(lnTable.ln[0].lnStr, test_ln) == 1,
 						"addLnEntry changed the lnStr");
-	fail_unless (entryId == 0,
+	ck_assert_msg (entryId == 0,
 				"addLnEntry returned wrong entryId: %d", entryId);
 
 #if VALUE_CROSSTABLE_USE
@@ -133,14 +133,14 @@ START_TEST (test_addLnEntry)
 
 	err = addLnEntry(&lnTable, test_ln, &entryId);
 
-	fail_unless (err == EXIP_OK, "addLnEntry returns error code %d", err);
-	fail_unless (lnTable.dynArray.arrayEntries == DEFAULT_LN_ENTRIES_NUMBER*2,
+	ck_assert_msg (err == EXIP_OK, "addLnEntry returns error code %d", err);
+	ck_assert_msg (lnTable.dynArray.arrayEntries == DEFAULT_LN_ENTRIES_NUMBER*2,
 				"addLnEntry did not update the dynArray.arrayEntries properly");
-	fail_unless (lnTable.count == DEFAULT_LN_ENTRIES_NUMBER + 1,
+	ck_assert_msg (lnTable.count == DEFAULT_LN_ENTRIES_NUMBER + 1,
 					"addLnEntry did not update count properly");
-	fail_unless (stringEqual(lnTable.ln[DEFAULT_LN_ENTRIES_NUMBER].lnStr, test_ln) == 1,
+	ck_assert_msg (stringEqual(lnTable.ln[DEFAULT_LN_ENTRIES_NUMBER].lnStr, test_ln) == 1,
 						"addLnEntry changed the lnStr");
-	fail_unless (entryId == DEFAULT_LN_ENTRIES_NUMBER,
+	ck_assert_msg (entryId == DEFAULT_LN_ENTRIES_NUMBER,
 				"addLnEntry returned wrong entryId: %d", entryId);
 #if VALUE_CROSSTABLE_USE
 	fail_if(lnTable.ln[DEFAULT_LN_ENTRIES_NUMBER].vxTable != NULL);
@@ -165,24 +165,24 @@ START_TEST (test_addValueEntry)
 		testStrm.buffer.bufStrm = EMPTY_BUFFER_STREAM;
 		tmp_err_code += createValueTable(&testStrm.valueTable);
 		testStrm.schema = memManagedAllocate(&testStrm.memList, sizeof(EXIPSchema));
-		fail_unless (testStrm.schema != NULL, "Memory alloc error");
+		ck_assert_msg (testStrm.schema != NULL, "Memory alloc error");
 		/* Create and initialize initial string table entries */
 		tmp_err_code += createDynArray(&testStrm.schema->uriTable.dynArray, sizeof(UriEntry), DEFAULT_URI_ENTRIES_NUMBER);
 		tmp_err_code += createUriTableEntries(&testStrm.schema->uriTable, FALSE);
 	}
-	fail_unless (tmp_err_code == EXIP_OK, "initStream returns an error code %d", tmp_err_code);
+	ck_assert_msg (tmp_err_code == EXIP_OK, "initStream returns an error code %d", tmp_err_code);
 
 	testStrm.gStack->currQNameID.uriId = 1; // http://www.w3.org/XML/1998/namespace
 	testStrm.gStack->currQNameID.lnId = 2; // lang
 
 	tmp_err_code = addValueEntry(&testStrm, testStr, testStrm.gStack->currQNameID);
 
-	fail_unless (tmp_err_code == EXIP_OK, "addValueEntry returns an error code %d", tmp_err_code);
+	ck_assert_msg (tmp_err_code == EXIP_OK, "addValueEntry returns an error code %d", tmp_err_code);
 #if VALUE_CROSSTABLE_USE
-	fail_unless (testStrm.schema->uriTable.uri[testStrm.gStack->currQNameID.uriId].lnTable.ln[testStrm.gStack->currQNameID.lnId].vxTable != NULL, "addValueEntry does not create vxTable");
-	fail_unless (testStrm.schema->uriTable.uri[testStrm.gStack->currQNameID.uriId].lnTable.ln[testStrm.gStack->currQNameID.lnId].vxTable->count == 1, "addValueEntry does not create correct vxTable");
+	ck_assert_msg (testStrm.schema->uriTable.uri[testStrm.gStack->currQNameID.uriId].lnTable.ln[testStrm.gStack->currQNameID.lnId].vxTable != NULL, "addValueEntry does not create vxTable");
+	ck_assert_msg (testStrm.schema->uriTable.uri[testStrm.gStack->currQNameID.uriId].lnTable.ln[testStrm.gStack->currQNameID.lnId].vxTable->count == 1, "addValueEntry does not create correct vxTable");
 #endif
-	fail_unless (testStrm.valueTable.count == 1, "addValueEntry does not create global value entry");
+	ck_assert_msg (testStrm.valueTable.count == 1, "addValueEntry does not create global value entry");
 
 	destroyDynArray(&testStrm.valueTable.dynArray);
 	destroyDynArray(&testStrm.schema->uriTable.dynArray);
