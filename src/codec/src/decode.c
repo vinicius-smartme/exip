@@ -9,13 +9,15 @@
  * @file decode.c
  * @brief An EXI decoder
  */
+
 #include "decode.h"
 #include "codec_common.h"
 #include "EXIParser.h"
 #include "stringManipulate.h"
+#include "parseSchema.h"
+#include "../../grammarGen/include/grammarGenerator.h"
 #include <stdio.h>
 #include <string.h>
-#include "../../grammarGen/include/grammarGenerator.h"
 
 #define INPUT_BUFFER_SIZE 200
 #define MAX_PREFIXES 10
@@ -186,7 +188,7 @@ errorCode decodeFromFile(
 	EXIPSchema schema;
 	void *inputFile;
 	errorCode ret;
-	if (schemaPath && (parseSchema(schemaPath, &schema) != EXIP_OK))
+	if (schemaPath && (parseSchema(schemaPath, NULL, &schema) != EXIP_OK))
 	{
 		return EXIP_INVALID_INPUT;
 	}
@@ -227,7 +229,7 @@ errorCode decodeFromBuffer(
 	EXIPSchema schema;
 	errorCode ret;
 
-	if (schemaPath && (parseSchema(schemaPath, &schema) != EXIP_OK))
+	if (schemaPath && (parseSchema(schemaPath, NULL, &schema) != EXIP_OK))
 	{
 		return EXIP_INVALID_INPUT;
 	}

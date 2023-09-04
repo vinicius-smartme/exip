@@ -1,7 +1,7 @@
 #include "parseSchema.h"
 #include "grammarGenerator.h"
 
-errorCode parseSchema(char *xsdList, EXIPSchema *schema)
+errorCode parseSchema(const char *xsdList, const EXIOptions *maskOpt, EXIPSchema *schema)
 {
     errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
     FILE *schemaFile;
@@ -22,7 +22,7 @@ errorCode parseSchema(char *xsdList, EXIPSchema *schema)
         if (schemaFilesCount > MAX_XSD_FILES_COUNT)
         {
             fprintf(stderr, "Too many xsd files given as an input: %d\n", schemaFilesCount);
-            exit(1);
+            return EXIP_INVALID_INPUT;
         }
 
         strcpy(schemaFileName, token);
@@ -30,7 +30,7 @@ errorCode parseSchema(char *xsdList, EXIPSchema *schema)
         if (!schemaFile)
         {
             fprintf(stderr, "Unable to open XSD file \"%s\" for parsing\n", schemaFileName);
-            exit(1);
+            return EXIP_INVALID_INPUT;
         }
         else
         {
@@ -45,7 +45,7 @@ errorCode parseSchema(char *xsdList, EXIPSchema *schema)
             {
                 fprintf(stderr, "Memory allocation error!\n");
                 fclose(schemaFile);
-                exit(1);
+                return EXIP_MEMORY_ALLOCATION_ERROR;
             }
 
             // Read file contents into buffer
@@ -60,7 +60,7 @@ errorCode parseSchema(char *xsdList, EXIPSchema *schema)
     }
 
     // Generate the EXI grammars based on the schema information
-    tmp_err_code = generateSchemaInformedGrammars(buffer, schemaFilesCount, SCHEMA_FORMAT_XSD_EXI, NULL, schema, NULL);
+    tmp_err_code = generateSchemaInformedGrammars(buffer, schemaFilesCount, SCHEMA_FORMAT_XSD_EXI, maskOpt, schema, NULL);
 
     for (i = 0; i < schemaFilesCount; i++)
     {

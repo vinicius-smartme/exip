@@ -14,6 +14,9 @@
 #include "codec_common.h"
 #include "EXISerializer.h"
 #include "stringManipulate.h"
+#include "parseSchema.h"
+#include "singleLinkedList.h"
+#include "../../grammarGen/include/grammarGenerator.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -483,7 +486,7 @@ errorCode encodeFromFile(
 	List *outData)
 {
 	EXIPSchema schema;
-	if (schemaPath && (parseSchema(schemaPath, &schema) != EXIP_OK)) {
+	if (schemaPath && (parseSchema(schemaPath, NULL, &schema) != EXIP_OK)) {
 		return EXIP_INVALID_INPUT;
 	}
 	//return encode(schemaPtr, out_stream, writeFileOutputStream);
@@ -504,7 +507,7 @@ errorCode encodeFromBuffer(
 {
 	EXIPSchema schema;
 	errorCode ret;
-	if (schemaPath && (parseSchema(schemaPath, &schema) != EXIP_OK)) {
+	if (schemaPath && (parseSchema(schemaPath, NULL, &schema) != EXIP_OK)) {
 		return EXIP_INVALID_INPUT;
 	}
 

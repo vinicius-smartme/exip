@@ -10,10 +10,11 @@
  * 
  *
  * @param[in] xsdList a list of paths to xsd schemas
+ * @param[in] maskOpt EXIOptions if any, otherwise NULL
  * @param[out] schema the parsed EXIPSchema object
  * @return Error handling code
  */
-errorCode parseSchema(char *xsdList, EXIPSchema *schema);
+errorCode parseSchema(const char *xsdList, const EXIOptions *maskOpt, EXIPSchema *schema);
 
 
 #endif //PARSE_SCHEMA_H
