@@ -71,6 +71,8 @@ START_TEST (test_decodeHeader)
 	testStream2.buffer.bufContent = 7;
 	testStream2.buffer.ioStrm.readWriteToStream = NULL;
 	testStream2.buffer.ioStrm.stream = NULL;
+	initAllocList(&testStream2.memList);
+	makeDefaultOpts(&testStream2.header.opts);
 
 	err = decodeHeader(&testStream2, TRUE);
 	ck_assert_msg (err == EXIP_OK, "decodeHeader returns error code %d", err);
