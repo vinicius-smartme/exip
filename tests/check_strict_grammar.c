@@ -57,7 +57,7 @@ size_t writeFileOutputStream(void* buf, size_t readSize, void* stream)
 	return fwrite(buf, 1, readSize, outfile);
 }
 
-static void parseSchema(const char* fileName, EXIPSchema* schema)
+static void parseSingleSchema(const char* fileName, EXIPSchema* schema)
 {
 	FILE *schemaFile;
 	BinaryBuffer buffer;
@@ -72,42 +72,22 @@ static void parseSchema(const char* fileName, EXIPSchema* schema)
 	if(!schemaFile)
 	{
 		ck_abort_msg("Unable to open file %s", exipath);
+		return;
 	}
-	else
+	else 
 	{
-		//Get file length
-		fseek(schemaFile, 0, SEEK_END);
-		buffer.bufLen = ftell(schemaFile) + 1;
-		fseek(schemaFile, 0, SEEK_SET);
-
-		//Allocate memory
-		buffer.buf = (char *)malloc(buffer.bufLen);
-		if (!buffer.buf)
-		{
-			fclose(schemaFile);
-			ck_abort_msg("Memory allocation error!");
-		}
-
-		//Read file contents into buffer
-		fread(buffer.buf, buffer.bufLen, 1, schemaFile);
 		fclose(schemaFile);
+	}
 
-		buffer.bufContent = buffer.bufLen;
-		buffer.ioStrm.readWriteToStream = NULL;
-		buffer.ioStrm.stream = NULL;
-		buffer.bufStrm = EMPTY_BUFFER_STREAM;
-
-		tmp_err_code = generateSchemaInformedGrammars(&buffer, 1, SCHEMA_FORMAT_XSD_EXI, NULL, schema, NULL);
-
-		if(tmp_err_code != EXIP_OK)
-		{
-			ck_abort_msg("\n Error reading schema: %d", tmp_err_code);
-		}
-
-		free(buffer.buf);
+	tmp_err_code = parseSchema(exipath, NULL, schema);
+	if (tmp_err_code == EXIP_MEMORY_ALLOCATION_ERROR) {
+		ck_abort_msg("Memory allocation error!");
+	}
+	else if (tmp_err_code != EXIP_OK) 
+	{
+		ck_abort_msg("Error reading schema: %d", tmp_err_code);
 	}
 }
-
 
 /* Document callbacks */
 
@@ -290,7 +270,7 @@ START_TEST (test_acceptance_for_A_01)
 	// Parsing steps:
 
 	// I.A: First, read in the schema
-	parseSchema(schemafname, &schema);
+	parseSingleSchema(schemafname, &schema);
 
 	// I.B: Define an external stream for the input to the parser if any
 	size_t pathlen = strlen(dataDir);
@@ -453,7 +433,7 @@ START_TEST (test_acceptance_for_A_01_exip1)
 	// Parsing steps:
 
 	// I.A: First, read in the schema
-	parseSchema(schemafname, &schema);
+	parseSingleSchema(schemafname, &schema);
 
 	// I.B: Define an external stream for the input to the parser if any
 	size_t pathlen = strlen(dataDir);
@@ -576,7 +556,7 @@ START_TEST (test_acceptance_for_A_01b)
 	// Serialization steps:
 
 	// I.A: First, read in the schema
-	parseSchema(schemafname, &schema);
+	parseSingleSchema(schemafname, &schema);
 
 	// I: First initialize the header of the stream
 	serialize.initHeader(&testStrm);
@@ -834,7 +814,7 @@ static error_code serializeIOMsg(char* buf, unsigned int buf_size, unsigned int*
 	// Serialization steps:
 
 	// I.A: First, read in the schema
-	parseSchema(schemafname, &lkab_schema);
+	parseSingleSchema(schemafname, &lkab_schema);
 
 	// I: First initialize the header of the stream
 	serialize.initHeader(&strm);
@@ -932,7 +912,7 @@ static error_code serializeDevDescMsg(char* buf, unsigned int buf_size, unsigned
 	// Serialization steps:
 
 	// I.A: First, read in the schema
-	parseSchema(schemafname, &lkab_schema);
+	parseSingleSchema(schemafname, &lkab_schema);
 
 	// I: First initialize the header of the stream
 	serialize.initHeader(&strm);
@@ -1072,7 +1052,7 @@ static error_code parseIOMsg(char* buf, unsigned int buf_size, BoolValue *val)
 	// Parsing steps:
 
 	// I.A: First, read in the schema
-	parseSchema(schemafname, &lkab_schema);
+	parseSingleSchema(schemafname, &lkab_schema);
 
 	// I: First, define an external stream for the input to the parser if any
 	buffer.ioStrm.stream = NULL;
@@ -1146,7 +1126,7 @@ static error_code parseDevDescMsg(char* buf, unsigned int buf_size, DevDescribti
 	// Parsing steps:
 
 	// I.A: First, read in the schema
-	parseSchema(schemafname, &lkab_schema);
+	parseSingleSchema(schemafname, &lkab_schema);
 
 	// I: First, define an external stream for the input to the parser if any
 	buffer.ioStrm.stream = NULL;

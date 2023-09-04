@@ -23,6 +23,7 @@
 #include "EXIParser.h"
 #include "stringManipulate.h"
 #include "grammarGenerator.h"
+#include "parseSchema.h"
 
 #define OUTPUT_BUFFER_SIZE 2000
 
@@ -174,7 +175,7 @@ static char *dataDir;
 
 #define PRINTOUTS 0
 
-static void parseSchema(const char* fileName, EXIPSchema* schema);
+static void parseSingleSchema(const char* fileName, EXIPSchema* schema);
 
 static errorCode sample_fatalError(const errorCode code, const char* msg, void* app_data);
 static errorCode sample_startDocument(void* app_data);
@@ -212,7 +213,7 @@ START_TEST (test_simple_schema)
 	buffer.ioStrm.stream = NULL;
 	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 	
-	parseSchema(schemafname, &schema);
+	parseSingleSchema(schemafname, &schema);
 	schemaPtr = &schema;
 
 	serialize.initHeader(&testStrm);
@@ -482,7 +483,7 @@ static errorCode sample_qnameData(const QName qname, void* app_data)
 	return EXIP_OK;
 }
 
-static void parseSchema(const char* fileName, EXIPSchema* schema)
+static void parseSingleSchema(const char* fileName, EXIPSchema* schema)
 {
 	FILE *schemaFile;
 	BinaryBuffer buffer;
@@ -497,39 +498,20 @@ static void parseSchema(const char* fileName, EXIPSchema* schema)
 	if(!schemaFile)
 	{
 		ck_abort_msg("Unable to open file %s", exipath);
+		return;
 	}
-	else
+	else 
 	{
-		//Get file length
-		fseek(schemaFile, 0, SEEK_END);
-		buffer.bufLen = ftell(schemaFile) + 1;
-		fseek(schemaFile, 0, SEEK_SET);
-
-		//Allocate memory
-		buffer.buf = (char *)malloc(buffer.bufLen);
-		if (!buffer.buf)
-		{
-			fclose(schemaFile);
-			ck_abort_msg("Memory allocation error!");
-		}
-
-		//Read file contents into buffer
-		fread(buffer.buf, buffer.bufLen, 1, schemaFile);
 		fclose(schemaFile);
+	}
 
-		buffer.bufContent = buffer.bufLen;
-		buffer.ioStrm.readWriteToStream = NULL;
-		buffer.ioStrm.stream = NULL;
-		buffer.bufStrm = EMPTY_BUFFER_STREAM;
-
-		tmp_err_code = generateSchemaInformedGrammars(&buffer, 1, SCHEMA_FORMAT_XSD_EXI, NULL, schema, NULL);
-
-		if(tmp_err_code != EXIP_OK)
-		{
-			ck_abort_msg("\n Error reading schema: %d", tmp_err_code);
-		}
-
-		free(buffer.buf);
+	tmp_err_code = parseSchema(exipath, NULL, schema);
+	if (tmp_err_code == EXIP_MEMORY_ALLOCATION_ERROR) {
+		ck_abort_msg("Memory allocation error!");
+	}
+	else if (tmp_err_code != EXIP_OK) 
+	{
+		ck_abort_msg("Error reading schema: %d", tmp_err_code);
 	}
 }
 

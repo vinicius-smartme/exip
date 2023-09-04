@@ -23,6 +23,7 @@
 #include "EXIParser.h"
 #include "stringManipulate.h"
 #include "grammarGenerator.h"
+#include "parseSchema.h"
 
 #define MAX_PATH_LEN 200
 #define OUTPUT_BUFFER_SIZE 2000
@@ -31,7 +32,7 @@ static char *dataDir;
 
 static size_t writeFileOutputStream(void* buf, size_t readSize, void* stream);
 static size_t readFileInputStream(void* buf, size_t readSize, void* stream);
-static void parseSchema(char** xsdList, int count, EXIPSchema* schema);
+static void parseMultiSchema(char** xsdList, int count, EXIPSchema* schema);
 
 #define TRY_CATCH_ENCODE(func) TRY_CATCH(func, serialize.closeEXIStream(&testStrm))
 
@@ -925,7 +926,7 @@ START_TEST (test_large_doc_str_pattern)
 	buffer.bufContent = 0;
 	buffer.bufStrm = EMPTY_BUFFER_STREAM;
 
-	parseSchema(schemafname, 1, &schema);
+	parseMultiSchema(schemafname, 1, &schema);
 
 	outfile = fopen(sourceFile, "wb" );
 	fail_if(!outfile, "Unable to open file %s", sourceFile);
@@ -1193,7 +1194,7 @@ START_TEST (test_large_doc_str_pattern)
     	// Parsing steps:
 
     	// I.A: First, read in the schema
-    	parseSchema(schemafname, 1, &schema);
+    	parseMultiSchema(schemafname, 1, &schema);
 
     	// I.B: Define an external stream for the input to the parser if any
     	infile = fopen(sourceFile, "rb" );
@@ -1255,7 +1256,7 @@ START_TEST (test_substitution_groups)
 	// Parsing steps:
 
 	// I.A: First, read in the schema
-	parseSchema(schemafname, 2, &schema);
+	parseMultiSchema(schemafname, 2, &schema);
 
 	// I.B: Define an external stream for the input to the parser if any
 	size_t pathlen = strlen(dataDir);
@@ -1316,65 +1317,50 @@ static size_t readFileInputStream(void* buf, size_t readSize, void* stream)
 	return fread(buf, 1, readSize, infile);
 }
 
-static void parseSchema(char** xsdList, int count, EXIPSchema* schema)
+static void parseMultiSchema(char** xsdList, int count, EXIPSchema* schema)
 {
-	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
 	FILE *schemaFile;
-	BinaryBuffer buffer[MAX_XSD_FILES_COUNT]; // up to 10 XSD files
+	BinaryBuffer buffer;
+	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
 	size_t pathlen = strlen(dataDir);
-	char exipath[MAX_PATH_LEN + strlen(xsdList[0])];
-	int i;
+	const size_t MAX_TOTAL_PATH_LEN = MAX_PATH_LEN*count + strlen(xsdList[0])*count;
+	char exipath[MAX_TOTAL_PATH_LEN];
+	char *pathPtr = exipath;
 
-	for (i = 0; i < count; i++)
+    memset(exipath, 0, MAX_TOTAL_PATH_LEN);
+
+for (int i = 0; i < count; i++)
 	{
-		memcpy(exipath, dataDir, pathlen);
-		exipath[pathlen] = '/';
-		memcpy(&exipath[pathlen+1], xsdList[i], strlen(xsdList[i])+1);
-		schemaFile = fopen(exipath, "rb" );
+		memcpy(pathPtr, dataDir, pathlen);
+		pathPtr[pathlen] = '/';
+		memcpy(&pathPtr[pathlen+1], xsdList[i], strlen(xsdList[i])+1);
+		schemaFile = fopen(pathPtr, "rb" );
 		if(!schemaFile)
 		{
-			ck_abort_msg("Unable to open file %s", exipath);
+			ck_abort_msg("Unable to open file %s", pathPtr);
+			return;
 		}
-		else
+		else 
 		{
-			//Get file length
-			fseek(schemaFile, 0, SEEK_END);
-			buffer[i].bufLen = ftell(schemaFile) + 1;
-			fseek(schemaFile, 0, SEEK_SET);
-
-			//Allocate memory
-			buffer[i].buf = (char *) malloc(buffer[i].bufLen);
-			if (!buffer[i].buf)
-			{
-				fclose(schemaFile);
-				ck_abort_msg("Memory allocation error!");
-			}
-
-			//Read file contents into buffer
-			fread(buffer[i].buf, buffer[i].bufLen, 1, schemaFile);
 			fclose(schemaFile);
-
-			buffer[i].bufContent = buffer[i].bufLen;
-			buffer[i].ioStrm.readWriteToStream = NULL;
-			buffer[i].ioStrm.stream = NULL;
-			buffer[i].bufStrm = EMPTY_BUFFER_STREAM;
+			pathPtr += pathlen + 1 + strlen(xsdList[i]);
+            if (i < (count - 1)){
+                // Skip on the latest step
+                pathPtr[0] = ',';
+                pathPtr++;
+            }
 		}
 	}
 
-	// Generate the EXI grammars based on the schema information
-	tmp_err_code = generateSchemaInformedGrammars(buffer, count, SCHEMA_FORMAT_XSD_EXI, NULL, schema, NULL);
-
-	for(i = 0; i < count; i++)
-	{
-		free(buffer[i].buf);
+	tmp_err_code = parseSchema(exipath, NULL, schema);
+	if (tmp_err_code == EXIP_MEMORY_ALLOCATION_ERROR) {
+		ck_abort_msg("Memory allocation error!");
 	}
-
-	if(tmp_err_code != EXIP_OK)
+	else if (tmp_err_code != EXIP_OK) 
 	{
-		ck_abort_msg ("\nGrammar generation error occurred: %d", tmp_err_code);
+		ck_abort_msg("Error reading schema: %d", tmp_err_code);
 	}
 }
-
 
 Suite* exip_suite(void)
 {

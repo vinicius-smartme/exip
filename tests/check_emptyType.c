@@ -21,6 +21,7 @@
 #include "EXIParser.h"
 #include "stringManipulate.h"
 #include "grammarGenerator.h"
+#include "parseSchema.h"
 
 #define MAX_PATH_LEN 200
 
@@ -45,7 +46,7 @@ size_t readFileInputStream(void* buf, size_t readSize, void* stream)
 	return fread(buf, 1, readSize, infile);
 }
 
-static void parseSchema(const char* fileName, EXIPSchema* schema)
+static void parseSingleSchema(const char* fileName, EXIPSchema* schema)
 {
 	FILE *schemaFile;
 	BinaryBuffer buffer;
@@ -60,39 +61,20 @@ static void parseSchema(const char* fileName, EXIPSchema* schema)
 	if(!schemaFile)
 	{
 		ck_abort_msg("Unable to open file %s", exipath);
+		return;
 	}
-	else
+	else 
 	{
-		//Get file length
-		fseek(schemaFile, 0, SEEK_END);
-		buffer.bufLen = ftell(schemaFile) + 1;
-		fseek(schemaFile, 0, SEEK_SET);
-
-		//Allocate memory
-		buffer.buf = (char *)malloc(buffer.bufLen);
-		if (!buffer.buf)
-		{
-			fclose(schemaFile);
-			ck_abort_msg("Memory allocation error!");
-		}
-
-		//Read file contents into buffer
-		fread(buffer.buf, buffer.bufLen, 1, schemaFile);
 		fclose(schemaFile);
+	}
 
-		buffer.bufContent = buffer.bufLen;
-		buffer.ioStrm.readWriteToStream = NULL;
-		buffer.ioStrm.stream = NULL;
-		buffer.bufStrm = EMPTY_BUFFER_STREAM;
-
-		tmp_err_code = generateSchemaInformedGrammars(&buffer, 1, SCHEMA_FORMAT_XSD_EXI, NULL, schema, NULL);
-
-		if(tmp_err_code != EXIP_OK)
-		{
-			ck_abort_msg("\n Error reading schema: %d", tmp_err_code);
-		}
-
-		free(buffer.buf);
+	tmp_err_code = parseSchema(exipath, NULL, schema);
+	if (tmp_err_code == EXIP_MEMORY_ALLOCATION_ERROR) {
+		ck_abort_msg("Memory allocation error!");
+	}
+	else if (tmp_err_code != EXIP_OK) 
+	{
+		ck_abort_msg("Error reading schema: %d", tmp_err_code);
 	}
 }
 
@@ -248,7 +230,7 @@ START_TEST (test_default_options)
 	// Parsing steps:
 
 	// I.A: First, read in the schema
-	parseSchema(EMPTY_TYPE_SCHEMA, &schema);
+	parseSingleSchema(EMPTY_TYPE_SCHEMA, &schema);
 
 	// I.B: Define an external stream for the input to the parser if any
 	pathlen = strlen(dataDir);
@@ -321,7 +303,7 @@ START_TEST (test_strict_option)
 	// Parsing steps:
 
 	// I.A: First, read in the schema
-	parseSchema(EMPTY_TYPE_SCHEMA, &schema);
+	parseSingleSchema(EMPTY_TYPE_SCHEMA, &schema);
 
 	// I.B: Define an external stream for the input to the parser if any
 	pathlen = strlen(dataDir);
