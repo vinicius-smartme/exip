@@ -64,12 +64,15 @@
  *
  * @def EXIP_MALLOC
  * 		malloc function
+ * @def EXIP_CALLOC
+ * 		calloc function
  * @def EXIP_REALLOC
  * 		realloc function
  * @def EXIP_MFREE
  * 		free function
  */
 #define EXIP_MALLOC malloc
+#define EXIP_CALLOC calloc
 #define EXIP_REALLOC realloc
 #define EXIP_MFREE free
 

@@ -22,7 +22,7 @@
 
 errorCode allocateStringMemory(CharType** str, Index UCSchars)
 {
-	*str = EXIP_MALLOC(sizeof(CharType)*UCSchars);
+	*str = EXIP_CALLOC(1, sizeof(CharType)*UCSchars);
 	if((*str) == NULL)
 		return EXIP_MEMORY_ALLOCATION_ERROR;
 	return EXIP_OK;
@@ -223,7 +223,7 @@ errorCode cloneString(const String* src, String* newStr)
 {
 	if(newStr == NULL)
 		return EXIP_NULL_POINTER_REF;
-	newStr->str = EXIP_MALLOC(sizeof(CharType)*src->length);
+	newStr->str = EXIP_CALLOC(1, sizeof(CharType)*src->length);
 	if(newStr->str == NULL)
 		return EXIP_MEMORY_ALLOCATION_ERROR;
 	newStr->length = src->length;
