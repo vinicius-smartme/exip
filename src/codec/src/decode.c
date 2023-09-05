@@ -170,13 +170,6 @@ static errorCode decode(
 		return tmp_err_code;
 }
 
-// errorCode decodeFromFile(
-// 	EXIPSchema *schemaPtr,
-// 	unsigned char outFlag,
-// 	boolean outOfBandOpts,
-// 	EXIOptions *opts,
-// 	void *inputFilePath,
-// 	List *outData)
 errorCode decodeFromFile(
 	const char *schemaPath,
 	unsigned char outFlag,
@@ -186,22 +179,31 @@ errorCode decodeFromFile(
 	List *outData)
 {
 	EXIPSchema schema;
+	EXIPSchema* schemaPtr = NULL;
 	void *inputFile;
 	errorCode ret;
-	if (schemaPath && (parseSchema(schemaPath, NULL, &schema) != EXIP_OK))
+
+	if (schemaPath)
 	{
-		return EXIP_INVALID_INPUT;
+		if ((parseSchema(schemaPath, NULL, &schema) != EXIP_OK))
+		{
+			fprintf(stderr, "Unable to parse schema\n");
+			return EXIP_INVALID_INPUT;
+		}
+		else {
+			schemaPtr = &schema;
+		}
 	}
 
 	inputFile = fopen(inputFilePath, "rb");
 	if (!inputFile)
 	{
 		fprintf(stderr, "Unable to open XML file \"%s\" for parsing\n", inputFilePath);
-		exit(1);
+		return EXIP_INVALID_INPUT;
 	}
 
 	ret = decode(
-		&schema,
+		schemaPtr,
 		outFlag,
 		hasOptions,
 		options,
@@ -211,9 +213,9 @@ errorCode decodeFromFile(
 		0,
 		outData);
 
-	destroySchema(&schema);
+	if(schemaPtr != NULL)
+		destroySchema(schemaPtr);
 	fclose(inputFile);
-
 	return ret;
 }
 
@@ -227,15 +229,23 @@ errorCode decodeFromBuffer(
 	List *outData)
 {
 	EXIPSchema schema;
+	EXIPSchema* schemaPtr = NULL;
 	errorCode ret;
 
-	if (schemaPath && (parseSchema(schemaPath, NULL, &schema) != EXIP_OK))
+	if (schemaPath)
 	{
-		return EXIP_INVALID_INPUT;
+		if ((parseSchema(schemaPath, NULL, &schema) != EXIP_OK))
+		{
+			fprintf(stderr, "Unable to parse schema\n");
+			return EXIP_INVALID_INPUT;
+		}
+		else {
+			schemaPtr = &schema;
+		}
 	}
 
 	ret = decode(
-		&schema,
+		schemaPtr,
 		outFlag,
 		hasOptions,
 		options,
@@ -245,7 +255,9 @@ errorCode decodeFromBuffer(
 		inDataLen,
 		outData);
 
-	destroySchema(&schema);
+	if(schemaPtr != NULL)
+		destroySchema(schemaPtr);
+
 	return ret;
 }
 
@@ -257,7 +269,7 @@ errorCode decodeFromBuffer(
  * @param list The list to be updated.
  * @param msg The message to be added to the list.
  */
-static void updateListLastAttribute(unsigned char isAttribute, List *list, char *msg)
+static errorCode updateListLastAttribute(unsigned char isAttribute, List *list, char *msg)
 {
 	size_t elementSize = 0;
 	if (isAttribute)
@@ -283,7 +295,7 @@ static void updateListLastAttribute(unsigned char isAttribute, List *list, char 
 		if (!msg_buffer)
 		{
 			fprintf(stderr, "Memory allocation error!");
-			exit(-1);
+			return EXIP_MEMORY_ALLOCATION_ERROR;
 		}
 		strcpy(msg_buffer, tail->data);
 		free(tail->data);
@@ -295,6 +307,8 @@ static void updateListLastAttribute(unsigned char isAttribute, List *list, char 
 	{
 		pushBack(list, (void *)msg, strlen(msg));
 	}
+
+	return EXIP_OK;
 }
 static errorCode sample_fatalError(const errorCode code, const char *msg, void *app_data)
 {
@@ -339,6 +353,8 @@ static errorCode sample_startElement(QName qname, void *app_data)
 	char msg[300];
 	size_t msgIdx = 0;
 	struct appData *appD = (struct appData *)app_data;
+	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
+
 	if (appD->outputFormat == OUT_EXI)
 	{
 		printf("SE ");
@@ -385,7 +401,11 @@ static errorCode sample_startElement(QName qname, void *app_data)
 			printf(">\n");
 			// sprintf(msg, ">\n");
 			// msgIdx++;
-			updateListLastAttribute(1, &(appD->outData), &">\n\0");
+			tmp_err_code = updateListLastAttribute(1, &(appD->outData), &">\n\0");
+			if (tmp_err_code != EXIP_OK) {
+				fprintf(stderr, "Unable to update list at sample_startElement - error code: %d", tmp_err_code);
+				return tmp_err_code;
+			}
 		}
 		printf("<%s", appD->nameBuf);
 		sprintf(msg + msgIdx, "<%s", appD->nameBuf);
@@ -415,6 +435,8 @@ static errorCode sample_endElement(void *app_data)
 	char msg[128];
 	size_t msgIdx = 0;
 	struct appData *appD = (struct appData *)app_data;
+	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
+
 	if (appD->outputFormat == OUT_EXI)
 	{
 		sprintf(msg, "EE\n\0");
@@ -429,7 +451,11 @@ static errorCode sample_endElement(void *app_data)
 			printf(">\n");
 			// sprintf(msg, ">\n");
 			// msgIdx++;
-			updateListLastAttribute(1, &(appD->outData), &">\n\0");
+			tmp_err_code = updateListLastAttribute(1, &(appD->outData), &">\n\0");
+			if (tmp_err_code != EXIP_OK) {
+				fprintf(stderr, "Unable to update list at sample_endElement - error code: %d", tmp_err_code);
+				return tmp_err_code;
+			}
 		}
 		appD->unclosedElement = 0;
 		el = pop(&(appD->stack));
@@ -496,6 +522,7 @@ static errorCode sample_stringData(const String value, void *app_data)
 	size_t msgIdx = 0;
 	struct appData *appD = (struct appData *)app_data;
 	unsigned char isAttribute = appD->expectAttributeData;
+	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
 
 	if (appD->outputFormat == OUT_EXI)
 	{
@@ -540,7 +567,11 @@ static errorCode sample_stringData(const String value, void *app_data)
 				printf(">");
 				// sprintf(msg + msgIdx, ">");
 				// msgIdx++;
-				updateListLastAttribute(1, &(appD->outData), &">\0");
+				tmp_err_code = updateListLastAttribute(1, &(appD->outData), &">\0");
+				if (tmp_err_code != EXIP_OK) {
+					fprintf(stderr, "Unable to update list at sample_stringData - error code: %d", tmp_err_code);
+					return tmp_err_code;
+				}
 			}
 			appD->unclosedElement = 0;
 			printString(&value);
@@ -550,7 +581,11 @@ static errorCode sample_stringData(const String value, void *app_data)
 		}
 	}
 
-	updateListLastAttribute(isAttribute, &(appD->outData), msg);
+	tmp_err_code = updateListLastAttribute(isAttribute, &(appD->outData), msg);
+	if (tmp_err_code != EXIP_OK) {
+		fprintf(stderr, "Unable to update list msg at sample_stringData - error code: %d", tmp_err_code);
+		return tmp_err_code;
+	}
 
 	return EXIP_OK;
 }
@@ -567,6 +602,7 @@ static errorCode sample_intData(Integer int_val, void *app_data)
 	struct appData *appD = (struct appData *)app_data;
 	unsigned char isAttribute = appD->expectAttributeData;
 	char tmp_buf[30];
+	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
 
 	if (appD->outputFormat == OUT_EXI)
 	{
@@ -607,7 +643,11 @@ static errorCode sample_intData(Integer int_val, void *app_data)
 				printf(">");
 				// sprintf(msg + msgIdx, ">");
 				// msgIdx++;
-				updateListLastAttribute(1, &(appD->outData), &">\0");
+				tmp_err_code = updateListLastAttribute(1, &(appD->outData), &">\0");
+				if (tmp_err_code != EXIP_OK) {
+					fprintf(stderr, "Unable to update list at sample_intData - error code: %d", tmp_err_code);
+					return tmp_err_code;
+				}
 			}
 			appD->unclosedElement = 0;
 			sprintf(tmp_buf, "%lld", (long long int)int_val);
@@ -617,7 +657,11 @@ static errorCode sample_intData(Integer int_val, void *app_data)
 		}
 	}
 
-	updateListLastAttribute(isAttribute, &(appD->outData), msg);
+	tmp_err_code = updateListLastAttribute(isAttribute, &(appD->outData), msg);
+	if (tmp_err_code != EXIP_OK) {
+		fprintf(stderr, "Unable to update list at sample_intData - error code: %d", tmp_err_code);
+		return tmp_err_code;
+	}
 	return EXIP_OK;
 }
 
@@ -627,6 +671,7 @@ static errorCode sample_booleanData(boolean bool_val, void *app_data)
 	size_t msgIdx = 0;
 	struct appData *appD = (struct appData *)app_data;
 	unsigned char isAttribute = appD->expectAttributeData;
+	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
 
 	if (appD->outputFormat == OUT_EXI)
 	{
@@ -687,7 +732,11 @@ static errorCode sample_booleanData(boolean bool_val, void *app_data)
 				printf(">");
 				// sprintf(msg + msgIdx, ">");
 				// msgIdx++;
-				updateListLastAttribute(1, &(appD->outData), &">\0");
+				tmp_err_code = updateListLastAttribute(1, &(appD->outData), &">\0");
+				if (tmp_err_code != EXIP_OK) {
+					fprintf(stderr, "Unable to update list at sample_booleanData - error code: %d", tmp_err_code);
+					return tmp_err_code;
+				}
 			}
 			appD->unclosedElement = 0;
 
@@ -706,7 +755,11 @@ static errorCode sample_booleanData(boolean bool_val, void *app_data)
 		}
 	}
 
-	updateListLastAttribute(isAttribute, &(appD->outData), msg);
+	tmp_err_code = updateListLastAttribute(isAttribute, &(appD->outData), msg);
+	if (tmp_err_code != EXIP_OK) {
+		fprintf(stderr, "Unable to update list at sample_booleanData - error code: %d", tmp_err_code);
+		return tmp_err_code;
+	}
 	return EXIP_OK;
 }
 
@@ -717,6 +770,7 @@ static errorCode sample_floatData(Float fl_val, void *app_data)
 	struct appData *appD = (struct appData *)app_data;
 	unsigned char isAttribute = appD->expectAttributeData;
 	char tmp_buf[30];
+	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
 
 	if (appD->outputFormat == OUT_EXI)
 	{
@@ -757,7 +811,11 @@ static errorCode sample_floatData(Float fl_val, void *app_data)
 				printf(">");
 				// sprintf(msg + msgIdx, ">");
 				// msgIdx++;
-				updateListLastAttribute(1, &(appD->outData), &">\0");
+				tmp_err_code = updateListLastAttribute(1, &(appD->outData), &">\0");
+				if (tmp_err_code != EXIP_OK) {
+					fprintf(stderr, "Unable to update list at sample_floatData - error code: %d", tmp_err_code);
+					return tmp_err_code;
+				}
 			}
 			appD->unclosedElement = 0;
 			sprintf(tmp_buf, "%lldE%d", (long long int)fl_val.mantissa, fl_val.exponent);
@@ -767,7 +825,11 @@ static errorCode sample_floatData(Float fl_val, void *app_data)
 		}
 	}
 
-	updateListLastAttribute(isAttribute, &(appD->outData), msg);
+	tmp_err_code = updateListLastAttribute(isAttribute, &(appD->outData), msg);
+	if (tmp_err_code != EXIP_OK) {
+		fprintf(stderr, "Unable to update list msg at sample_floatData - error code: %d", tmp_err_code);
+		return tmp_err_code;
+	}
 	return EXIP_OK;
 }
 
@@ -780,6 +842,7 @@ static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data)
 	char fsecBuf[30];
 	char tzBuf[30];
 	int i;
+	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
 
 	if (IS_PRESENT(dt_val.presenceMask, FRACT_PRESENCE))
 	{
@@ -876,7 +939,11 @@ static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data)
 				printf(">");
 				// sprintf(msg + msgIdx, ">");
 				// msgIdx++;
-				updateListLastAttribute(1, &(appD->outData), &">\0");
+				tmp_err_code = updateListLastAttribute(1, &(appD->outData), &">\0");
+				if (tmp_err_code != EXIP_OK) {
+					fprintf(stderr, "Unable to update list at sample_dateTimeData - error code: %d", tmp_err_code);
+					return tmp_err_code;
+				}
 			}
 			appD->unclosedElement = 0;
 			printf("%04d-%02d-%02dT%02d:%02d:%02d%s%s", dt_val.dateTime.tm_year + 1900,
@@ -892,7 +959,11 @@ static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data)
 		}
 	}
 
-	updateListLastAttribute(isAttribute, &(appD->outData), msg);
+	tmp_err_code = updateListLastAttribute(isAttribute, &(appD->outData), msg);
+	if (tmp_err_code != EXIP_OK) {
+		fprintf(stderr, "Unable to update list msg at sample_dateTimeData - error code: %d", tmp_err_code);
+		return tmp_err_code;
+	}
 	return EXIP_OK;
 }
 
@@ -902,6 +973,7 @@ static errorCode sample_binaryData(const char *binary_val, Index nbytes, void *a
 	size_t msgIdx = 0;
 	struct appData *appD = (struct appData *)app_data;
 	unsigned char isAttribute = appD->expectAttributeData;
+	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
 
 	if (appD->outputFormat == OUT_EXI)
 	{
@@ -939,7 +1011,11 @@ static errorCode sample_binaryData(const char *binary_val, Index nbytes, void *a
 				printf(">");
 				// sprintf(msg + msgIdx, ">");
 				// msgIdx++;
-				updateListLastAttribute(1, &(appD->outData), &">\0");
+				tmp_err_code = updateListLastAttribute(1, &(appD->outData), &">\0");
+				if (tmp_err_code != EXIP_OK) {
+					fprintf(stderr, "Unable to update list at sample_binaryData - error code: %d", tmp_err_code);
+					return tmp_err_code;
+				}
 			}
 			appD->unclosedElement = 0;
 			printf("[binary: %d bytes]", (int)nbytes);
@@ -948,7 +1024,11 @@ static errorCode sample_binaryData(const char *binary_val, Index nbytes, void *a
 		}
 	}
 
-	updateListLastAttribute(isAttribute, &(appD->outData), msg);
+	tmp_err_code = updateListLastAttribute(isAttribute, &(appD->outData), msg);
+	if (tmp_err_code != EXIP_OK) {
+		fprintf(stderr, "Unable to update list msg at sample_binaryData - error code: %d", tmp_err_code);
+		return tmp_err_code;
+	}
 	return EXIP_OK;
 }
 
@@ -958,6 +1038,7 @@ static errorCode sample_qnameData(const QName qname, void *app_data)
 	size_t msgIdx = 0;
 	struct appData *appD = (struct appData *)app_data;
 	unsigned char isAttribute = appD->expectAttributeData;
+	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
 
 	if (appD->outputFormat == OUT_EXI)
 	{
@@ -1018,7 +1099,11 @@ static errorCode sample_qnameData(const QName qname, void *app_data)
 				printf(">");
 				// sprintf(msg + msgIdx, ">");
 				// msgIdx++;
-				updateListLastAttribute(1, &(appD->outData), &">\0");
+				tmp_err_code = updateListLastAttribute(1, &(appD->outData), &">\0");
+				if (tmp_err_code != EXIP_OK) {
+					fprintf(stderr, "Unable to update list at sample_qnameData - error code: %d", tmp_err_code);
+					return tmp_err_code;
+				}
 			}
 			appD->unclosedElement = 0;
 			printString(qname.uri);
@@ -1033,7 +1118,11 @@ static errorCode sample_qnameData(const QName qname, void *app_data)
 		}
 	}
 
-	updateListLastAttribute(isAttribute, &(appD->outData), msg);
+	tmp_err_code = updateListLastAttribute(isAttribute, &(appD->outData), msg);
+	if (tmp_err_code != EXIP_OK) {
+		fprintf(stderr, "Unable to update list msg at sample_qnameData - error code: %d", tmp_err_code);
+		return tmp_err_code;
+	}
 	return EXIP_OK;
 }
 
