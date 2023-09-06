@@ -67,15 +67,29 @@ errorCode writeEncodedEXIChunk(EXIStream* strm);
 
 
 /**
- * @brief Gets the available data on the Stream, if any
- * @param[in] buffer BinaryBuffer to get/set the data from/to
+ * @brief Reads the available data from the Stream(IO or buffer) into the memory buffer, if any
+ * @note A function pointer used to fill the EXI buffer when emptied by reading "doSize" number of bytes.
+ * @note Offset will be applied to the internal buffer pointer and not to the stream/external buffer.
+ * @param[in] buffer BinaryBuffer to operate the read
  * @param[in] offset offsets the destination buffer address
- * @param[in] doSize number of bytes to write/read from/to the buffer
- * @param[in] toRead indicates if it is a read operation. If false, means a write operation
- * @param[in] doneSize number of bytes to written/read from/to the buffer
+ * @param[in] doSize number of bytes to read from the stream
+ * @param[in] doneSize number of bytes to write to the buffer
  *
  * @return The error code
  */
-errorCode doReadWriteToStream(BinaryBuffer* buffer, Index offset, size_t doSize, boolean toRead, Index* doneSize) ;
+errorCode readFromStream(BinaryBuffer* buffer, Index offset, size_t doSize, Index* doneSize) ;
 
+/**
+ * @brief Writes the available data to the  Stream(IO or buffer) from the memory buffer, if any
+ * @note A function pointer used to write "doSize" number of bytes from the buffer. If the buffer size is insufficient,
+ * it tries to reallocate memory to fit more data.
+ * @note Offset will be applied to the internal buffer pointer and not to the stream/external buffer.
+ * @param[in] buffer BinaryBuffer to operate the write
+ * @param[in] offset offsets the destination buffer address
+ * @param[in] doSize number of bytes to read from the buffer
+ * @param[in] doneSize number of bytes to written to the stream
+ *
+ * @return The error code
+ */
+errorCode writeToStream(BinaryBuffer* buffer, Index offset, size_t doSize, Index* doneSize) ;
 #endif /* IOUTIL_H_ */

@@ -1030,7 +1030,7 @@ errorCode closeEXIStream(EXIStream* strm)
 	if(strm->buffer.ioStrm.readWriteToStream != NULL || strm->buffer.bufStrm.buf != NULL)
 	{
 		Index numBytesWritten = 0;
-		doReadWriteToStream(&(strm->buffer), 0, strm->context.bufferIndx + 1, FALSE, &numBytesWritten);
+		writeToStream(&(strm->buffer), 0, strm->context.bufferIndx + 1, &numBytesWritten);
 		if(numBytesWritten < strm->context.bufferIndx + 1) {
 			tmp_err_code = EXIP_BUFFER_END_REACHED;
 		}

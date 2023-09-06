@@ -36,7 +36,7 @@ errorCode readNextBit(EXIStream* strm, boolean* bit_val)
 		strm->context.bufferIndx = 0;
 		strm->buffer.bufContent = 0;
 		Index numBytesRead = 0;
-		errorCode error = doReadWriteToStream(&(strm->buffer), 0, strm->buffer.bufLen, TRUE, &numBytesRead);
+		errorCode error = readFromStream(&(strm->buffer), 0, strm->buffer.bufLen, &numBytesRead);
 		if (error != EXIP_OK)  
 			return error;
 		if(strm->buffer.bufContent == 0)

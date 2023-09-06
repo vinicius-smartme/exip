@@ -114,7 +114,7 @@ errorCode readEXIChunkForParsing(EXIStream* strm, unsigned int numBytesToBeRead)
 
 	memcpy(strm->buffer.buf, strm->buffer.buf + strm->context.bufferIndx, bytesCopied);
 
-	errorCode error = doReadWriteToStream(&(strm->buffer), bytesCopied, strm->buffer.bufLen - bytesCopied, TRUE, &bytesRead);
+	errorCode error = readFromStream(&(strm->buffer), bytesCopied, strm->buffer.bufLen - bytesCopied, &bytesRead);
 	if (error != EXIP_OK)  
 		return error;
 
@@ -137,7 +137,7 @@ errorCode writeEncodedEXIChunk(EXIStream* strm)
 
 	leftOverBits = strm->buffer.buf[strm->context.bufferIndx];
 
-	errorCode error = doReadWriteToStream(&(strm->buffer), 0, strm->context.bufferIndx, FALSE, &numBytesWritten);
+	errorCode error = writeToStream(&(strm->buffer), 0, strm->context.bufferIndx, &numBytesWritten);
 	if (error != EXIP_OK)  
 		return error;
 	if(numBytesWritten < strm->context.bufferIndx)
@@ -149,17 +149,11 @@ errorCode writeEncodedEXIChunk(EXIStream* strm)
 	return EXIP_OK;
 }
 
-/*
-* Reads from the stream if there is a .readWriteToStream available. Otherwise, tries to read from a input buffer.
-* 
-* When parsing (toRead true): A function pointer used to fill the EXI buffer when emptied by reading "doSize" number of bytes
-* When serializing (toRead false): A function pointer used to write "doSize" number of bytes of the buffer
-* Offset will be applied to the internal buffer pointer and not to the stream/external buffer.
-* 
-* Return the error code
-*/
-errorCode doReadWriteToStream(BinaryBuffer* buffer, Index offset, size_t doSize, boolean toRead, Index* doneSize) 
+errorCode readFromStream(BinaryBuffer* buffer, Index offset, size_t doSize, Index* doneSize) 
 {
+	size_t newSize = 0;
+	char* tmpPtr = NULL;
+
 	if(buffer->ioStrm.readWriteToStream == NULL)
 	{
 		if(buffer->bufStrm.bufContent == 0) {
@@ -169,28 +163,58 @@ errorCode doReadWriteToStream(BinaryBuffer* buffer, Index offset, size_t doSize,
 		}
 		else {
 			if (doSize + buffer->bufStrm.bufPtr > buffer->bufStrm.bufContent) {
-				printf("doSize outside bounds");
+				printf("doSize outside bounds.");
 				*doneSize = buffer->bufStrm.bufContent - buffer->bufStrm.bufPtr;
 			} else {
 				*doneSize = doSize;
 			}
-			if(toRead) {
-				// Do read
-				memcpy(buffer->buf + offset, buffer->bufStrm.buf + buffer->bufStrm.bufPtr, *doneSize);
-				buffer->bufContent = offset + *doneSize;
-			}
-			else {
-				// Do write
-				memcpy(buffer->bufStrm.buf + buffer->bufStrm.bufPtr, buffer->buf + offset, *doneSize);
-				buffer->bufStrm.bufContent += *doneSize;
-			}
+			// Do read
+			memcpy(buffer->buf + offset, buffer->bufStrm.buf + buffer->bufStrm.bufPtr, *doneSize);
+			buffer->bufContent = offset + *doneSize;
 			buffer->bufStrm.bufPtr += *doneSize;
-			printf("from/to buffer(offset: %d, size: %d, read %d)\n", offset, doSize, *doneSize);
 		}
 	}
 	else {
 		*doneSize = (Index)buffer->ioStrm.readWriteToStream(buffer->buf + offset, doSize, buffer->ioStrm.stream);
-		printf("from/to stream(offset: %d, size: %d, read %d)\n", offset, doSize, *doneSize);
+	}
+	return EXIP_OK;
+}
+
+errorCode writeToStream(BinaryBuffer* buffer, Index offset, size_t doSize, Index* doneSize) 
+{
+	size_t newSize = 0;
+	char* tmpPtr = NULL;
+
+	if(buffer->ioStrm.readWriteToStream == NULL)
+	{
+		if (doSize + buffer->bufStrm.bufPtr > buffer->bufStrm.bufLen) {
+			// writing outside bounds. Trying to reallocate memory
+			// Rounds up a multiple of 2 for the new size
+			newSize = 2<<(getBitsNumber(doSize + buffer->bufStrm.bufPtr) - 1);
+			int* tmp = (int*)realloc(buffer->bufStrm.buf, newSize);
+			if(tmp == NULL)
+			{
+				// free(buffer->bufStrm.buf);
+				fprintf(stderr, "Failed to reallocate memory for the buffer\n");
+				return EXIP_MEMORY_ALLOCATION_ERROR;
+			}
+			else if(buffer->buf != tmp)
+			{
+				buffer->bufStrm.buf = tmp;
+				buffer->bufStrm.bufLen = newSize;
+			}
+			tmp = NULL;
+		}
+		*doneSize = doSize;
+		// Do write
+		memcpy(buffer->bufStrm.buf + buffer->bufStrm.bufPtr, buffer->buf + offset, *doneSize);
+		buffer->bufStrm.bufContent += *doneSize;
+		buffer->bufStrm.bufPtr += *doneSize;
+		// printf("from/to buffer(offset: %d, size: %d, read %d)\n", offset, doSize, *doneSize);
+	}
+	else {
+		*doneSize = (Index)buffer->ioStrm.readWriteToStream(buffer->buf + offset, doSize, buffer->ioStrm.stream);
+		// printf("from/to stream(offset: %d, size: %d, read %d)\n", offset, doSize, *doneSize);
 	}
 	return EXIP_OK;
 }
