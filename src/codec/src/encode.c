@@ -356,8 +356,8 @@ static errorCode encode(
 	size_t inDataLen,
 	void *outStreamPath,
 	size_t (*outputStream)(void *buf, size_t size, void *stream),
-	void *outData,
-	size_t outDataLen
+	char **outData,
+	size_t *outDataLen
 	)
 {
 	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
@@ -392,11 +392,11 @@ static errorCode encode(
 	// III: Define an external stream for the output if any, otherwise set to NULL
 	buffer.ioStrm.readWriteToStream = outputStream;
 	buffer.ioStrm.stream = outStreamPath;
-	if (outputStream == NULL && outData != NULL && outDataLen > 0)
+	if (outputStream == NULL)
 	{
-		buffer.bufStrm.buf = outData;
+		buffer.bufStrm.buf = calloc(1, OUTPUT_BUFFER_SIZE);
 		buffer.bufStrm.bufContent = 0;
-		buffer.bufStrm.bufLen = outDataLen;
+		buffer.bufStrm.bufLen = OUTPUT_BUFFER_SIZE;
 	}
 	
 	// IV: Initialize the stream
@@ -415,9 +415,8 @@ static errorCode encode(
 		else if(read_endDocument(inFlag, (const char *)entry->data) == EXIP_OK)
 		{
 			TRY_CATCH_ENCODE(serialize.endDocument(&testStrm));
-			outDataLen = testStrm.buffer.bufContent;
-			outData = calloc(1, outDataLen);
-			memcpy(outData, testStrm.buffer.buf, outDataLen);
+			*outDataLen = testStrm.buffer.bufStrm.bufContent;
+			*outData = testStrm.buffer.bufStrm.buf;
 			TRY_CATCH_ENCODE(serialize.closeEXIStream(&testStrm));
 			return EXIP_OK;
 		}
@@ -471,10 +470,19 @@ static errorCode encode(
 			listIdx++;
 		}
 		else {
-			outDataLen = 0;
-			return EXIP_UNEXPECTED_ERROR;
+			*outDataLen = 0;
+			tmp_err_code = EXIP_UNEXPECTED_ERROR;
+			break;
 		}
 	};
+
+	if(tmp_err_code != EXIP_OK)
+	{
+		free(buffer.bufStrm.buf);
+		closeStream(&testStrm);
+		*outDataLen = 0;
+	}
+	return tmp_err_code;
 }
 
 errorCode encodeFromFile(
@@ -483,16 +491,28 @@ errorCode encodeFromFile(
 	boolean hasOptions, 
 	EXIOptions *options,
 	const char *inputFilePath, 
-	List *outData)
+	char **outData,
+	size_t *outDataLen)
 {
-	EXIPSchema schema;
-	if (schemaPath && (parseSchema(schemaPath, NULL, &schema) != EXIP_OK)) {
-		return EXIP_INVALID_INPUT;
-	}
-	//return encode(schemaPtr, out_stream, writeFileOutputStream);
+	// EXIPSchema schema;
+	// EXIPSchema* schemaPtr = NULL;
+	// errorCode ret;
 
-	destroySchema(&schema);
-	return 0;
+	// if (schemaPath)
+	// {
+	// 	if ((parseSchema(schemaPath, NULL, &schema) != EXIP_OK))
+	// 	{
+	// 		fprintf(stderr, "Unable to parse schema\n");
+	// 		return EXIP_INVALID_INPUT;
+	// 	}
+	// 	else {
+	// 		schemaPtr = &schema;
+	// 	}
+	// }
+	// //return encode(schemaPtr, out_stream, writeFileOutputStream);
+
+	// destroySchema(&schema);
+	return EXIP_NOT_IMPLEMENTED_YET;
 }
 
 errorCode encodeFromBuffer(
@@ -502,17 +522,27 @@ errorCode encodeFromBuffer(
 	EXIOptions *options,
 	List *inData,
 	size_t inDataLen,
-	void *outData,
-	size_t outDataLen)
+	char **outData,
+	size_t *outDataLen)
 {
 	EXIPSchema schema;
+	EXIPSchema* schemaPtr = NULL;
 	errorCode ret;
-	if (schemaPath && (parseSchema(schemaPath, NULL, &schema) != EXIP_OK)) {
-		return EXIP_INVALID_INPUT;
+
+	if (schemaPath)
+	{
+		if ((parseSchema(schemaPath, NULL, &schema) != EXIP_OK))
+		{
+			fprintf(stderr, "Unable to parse schema\n");
+			return EXIP_INVALID_INPUT;
+		}
+		else {
+			schemaPtr = &schema;
+		}
 	}
 
 	ret = encode(
-		&schema,
+		schemaPtr,
 		outFlag,
 		hasOptions,
 		options,
@@ -520,7 +550,7 @@ errorCode encodeFromBuffer(
 		inDataLen,
 		NULL,
 		NULL,
-		outData,
+		&(*outData),
 		outDataLen
 	);
 

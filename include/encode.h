@@ -27,7 +27,8 @@ errorCode encodeFromFile(
 	boolean hasOptions, 
 	EXIOptions *options,
 	const char *inputFilePath, 
-	List *outData);
+	char **outData,
+	size_t *outDataLen);
 
 errorCode encodeFromBuffer(
     const char *schemaPath,
@@ -36,7 +37,7 @@ errorCode encodeFromBuffer(
 	EXIOptions *options,
 	List *inData,
 	size_t inDataLen,
-	void *outData,
-	size_t outDataLen);
+	char **outData,
+	size_t *outDataLen);
 
 #endif /* ENCODE_H_ */
