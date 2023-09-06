@@ -60,7 +60,7 @@ Node *popFront(List *list)
     return node;
 }
 
-Node *pop_back(List *list)
+Node *popBack(List *list)
 {
     return popAt(list, list->size - 1);
 }
