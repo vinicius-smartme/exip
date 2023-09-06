@@ -29,7 +29,6 @@
 /** This is the statically generated EXIP schema definition for the EXI Options document*/
 extern const EXIPSchema ops_schema;
 
-static void closeOptionsStream(EXIStream* strm);
 static errorCode serializeOptionsStream(EXIStream* options_strm, EXIOptions* opts, UriTable* uriTbl);
 
 errorCode encodeHeader(EXIStream* strm)
@@ -86,9 +85,9 @@ errorCode encodeHeader(EXIStream* strm)
 		options_strm.gStack = NULL;
 		options_strm.schema = (EXIPSchema*) &ops_schema;
 
-		TRY_CATCH(createValueTable(&options_strm.valueTable), closeOptionsStream(&options_strm));
-		TRY_CATCH(pushGrammar(&options_strm.gStack, emptyQnameID, (EXIGrammar*) &ops_schema.docGrammar), closeOptionsStream(&options_strm));
-		TRY_CATCH(serializeOptionsStream(&options_strm, &strm->header.opts, &strm->schema->uriTable), closeOptionsStream(&options_strm));
+		TRY_CATCH(createValueTable(&options_strm.valueTable), closeStream(&options_strm));
+		TRY_CATCH(pushGrammar(&options_strm.gStack, emptyQnameID, (EXIGrammar*) &ops_schema.docGrammar), closeStream(&options_strm));
+		TRY_CATCH(serializeOptionsStream(&options_strm, &strm->header.opts, &strm->schema->uriTable), closeStream(&options_strm));
 
 		strm->buffer.bufContent = options_strm.buffer.bufContent;
 		strm->context.bitPointer = options_strm.context.bitPointer;
@@ -105,13 +104,13 @@ errorCode encodeHeader(EXIStream* strm)
 			}
 		}
 
-		closeOptionsStream(&options_strm);
+		closeStream(&options_strm);
 	}
 
 	return EXIP_OK;
 }
 
-static void closeOptionsStream(EXIStream* strm)
+void closeStream(EXIStream* strm)
 {
 	while(strm->gStack != NULL)
 	{

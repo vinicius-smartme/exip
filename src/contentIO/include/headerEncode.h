@@ -30,4 +30,9 @@
  */
 errorCode encodeHeader(EXIStream* strm);
 
+/**
+ * @brief Closes a stream by cleanning the gStack and freeing the AllMem
+*/
+void closeStream(EXIStream* strm);
+
 #endif /* HEADERENCODE_H_ */
