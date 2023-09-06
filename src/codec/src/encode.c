@@ -319,8 +319,39 @@ errorCode read_attribute(unsigned char inFlag, const char *data, String *uri, St
 	return EXIP_OK;
 }
 
-errorCode read_stringData(unsigned char inFlag, const char *data, String *uri, String *localName) {
-	return EXIP_NOT_IMPLEMENTED_YET;
+errorCode read_stringData(unsigned char inFlag, const char *data, String *chVal) {
+	char* strPtr = NULL;
+	char* localNamePtr = NULL;
+	size_t strLen = 0;
+	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
+
+	// Clears output parameters
+	if (!isStringEmpty(chVal)) {
+		clearString(chVal);
+	}
+
+	if (inFlag== IN_EXI)
+	{
+		strPtr = strstr(data, "CH ");
+		if (strPtr == NULL) {
+			return EXIP_INVALID_INPUT;
+		}
+		else {
+			strPtr += 3;
+		}
+
+		strLen = strlen(data) - strLen;
+		TRY(asciiToString(strPtr, chVal, TRUE));
+	}
+	else if (inFlag== IN_XML)
+	{
+		strLen = strlen(data) - strLen;
+		TRY(asciiToString(strPtr, chVal, TRUE));
+	}
+	else 
+		return EXIP_INVALID_INPUT;
+
+	return EXIP_OK;
 }
 
 errorCode read_namespaceDeclaration(unsigned char inFlag, const char *data, String *uri, String *localName) {
@@ -365,7 +396,7 @@ static errorCode encode(
 	String uri = EMPTY_STRING;
 	String ln = EMPTY_STRING;
 	QName qname = {&uri, &ln, NULL};
-	String chVal;
+	String chVal = EMPTY_STRING;
 	char buf[OUTPUT_BUFFER_SIZE];
 	BinaryBuffer buffer;
 	EXITypeClass valueType;
@@ -435,7 +466,7 @@ static errorCode encode(
 			TRY_CATCH_ENCODE(serialize.attribute(&testStrm, qname, TRUE, &valueType));
 			listIdx++;
 		}
-		else if(read_stringData(inFlag, entry->data, &uri, &ln) == EXIP_OK)
+		else if(read_stringData(inFlag, entry->data, &chVal) == EXIP_OK)
 		{
 			TRY_CATCH_ENCODE(serialize.stringData(&testStrm, chVal));
 			listIdx++;
