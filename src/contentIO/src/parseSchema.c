@@ -5,6 +5,7 @@ errorCode parseSchema(const char *xsdList, const EXIOptions *maskOpt, EXIPSchema
 {
     errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
     FILE *schemaFile;
+    SchemaFormat schemaFormat = SCHEMA_FORMAT_XSD_EXI;
     BinaryBuffer buffer[MAX_XSD_FILES_COUNT]; // up to 10 XSD files
     char schemaFileName[500];
     unsigned int schemaFilesCount = 0;
@@ -34,6 +35,7 @@ errorCode parseSchema(const char *xsdList, const EXIOptions *maskOpt, EXIPSchema
         }
         else
         {
+            schemaFormat = strstr(schemaFileName, ".xsd") != NULL ? SCHEMA_FORMAT_XSD_XML : SCHEMA_FORMAT_XSD_EXI;
             // Get file length
             fseek(schemaFile, 0, SEEK_END);
             buffer[i].bufLen = ftell(schemaFile) + 1;
@@ -60,7 +62,7 @@ errorCode parseSchema(const char *xsdList, const EXIOptions *maskOpt, EXIPSchema
     }
 
     // Generate the EXI grammars based on the schema information
-    tmp_err_code = generateSchemaInformedGrammars(buffer, schemaFilesCount, SCHEMA_FORMAT_XSD_EXI, maskOpt, schema, NULL);
+    tmp_err_code = generateSchemaInformedGrammars(buffer, schemaFilesCount, schemaFormat, maskOpt, schema, NULL);
 
     for (i = 0; i < schemaFilesCount; i++)
     {
