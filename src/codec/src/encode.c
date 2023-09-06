@@ -15,8 +15,6 @@
 #include "EXISerializer.h"
 #include "stringManipulate.h"
 #include "parseSchema.h"
-#include "singleLinkedList.h"
-#include "../../grammarGen/include/grammarGenerator.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -79,7 +77,7 @@ errorCode read_endDocument(unsigned char inFlag, const char *data)
 		return EXIP_INVALID_INPUT;
 }
 
-errorCode read_startElement(unsigned char inFlag, const char *data, List *elementList, String *uri, String *localName)
+errorCode read_startElement(unsigned char inFlag, const char *data, String *uri, String *localName)
 {
 	char* strPtr = NULL;
 	char* localNamePtr = NULL;
@@ -153,9 +151,6 @@ errorCode read_startElement(unsigned char inFlag, const char *data, List *elemen
 			TRY(asciiToString(tmp_uri, uri, TRUE));
 			TRY(asciiToString(tmp_localName, localName, TRUE));
 		}
-
-		// This entry will be verified when ending the element
-		pushBack(elementList, localName->str, localName->length);
 	}
 	else 
 		return EXIP_INVALID_INPUT;
@@ -163,36 +158,32 @@ errorCode read_startElement(unsigned char inFlag, const char *data, List *elemen
 	return EXIP_OK;
 }
 
-errorCode read_endElement(unsigned char inFlag, const char *data, List *elementList)
+errorCode read_endElement(unsigned char inFlag, const char *data)
 {
 	char *strPtr = NULL;
-	Node *entry;
+	Node *entry = NULL;
+
 	if (inFlag == IN_EXI)
+	{
 		return strstr(data, "EE") != NULL ? EXIP_OK : EXIP_INVALID_INPUT;
+	}
 	else if (inFlag == IN_XML)
 	{
 		strPtr = strstr(data, "</");
 		if (strPtr != NULL)
 		{
 			strPtr += 2;
-			// Verifies if the ending the element matches the one in the list
-			entry = pop_back(elementList);
-			if (strstr(entry->data, strPtr) != NULL) {
-				clearNode(entry);
-				return EXIP_OK;
-			}
-			else
-			{
-				clearNode(entry);
-				return EXIP_INVALID_EVENT;
-			}
-		    
+			return EXIP_OK;
 		}
 		else 
-			return EXIP_INVALID_INPUT;
+		{
+			return EXIP_INVALID_EVENT;
+		}
 	}
-	else 
+	else
+	{
 		return EXIP_INVALID_INPUT;
+	}
 }
 
 errorCode read_attribute(unsigned char inFlag, const char *data, String *uri, String *localName, EXITypeClass *valueType)
@@ -402,7 +393,6 @@ static errorCode encode(
 	EXITypeClass valueType;
 	size_t listIdx = 0;
 	Node *entry;
-	List elementList = newList();	// Used to verify that an xml element starts and ends
 
 	buffer.buf = buf;
 	buffer.bufLen = OUTPUT_BUFFER_SIZE;
@@ -449,14 +439,15 @@ static errorCode encode(
 			*outDataLen = testStrm.buffer.bufStrm.bufContent;
 			*outData = testStrm.buffer.bufStrm.buf;
 			TRY_CATCH_ENCODE(serialize.closeEXIStream(&testStrm));
-			return EXIP_OK;
+			tmp_err_code = EXIP_OK;
+			break;
 		}
-		else if(read_startElement(inFlag, entry->data, &elementList, &uri, &ln) == EXIP_OK)
+		else if(read_startElement(inFlag, entry->data, &uri, &ln) == EXIP_OK)
 		{
 			TRY_CATCH_ENCODE(serialize.startElement(&testStrm, qname, &valueType));
 			listIdx++;
 		}
-		else if(read_endElement(inFlag, (const char *)entry->data, &elementList) == EXIP_OK)
+		else if(read_endElement(inFlag, (const char *)entry->data) == EXIP_OK)
 		{
 			TRY_CATCH_ENCODE(serialize.endElement(&testStrm));
 			listIdx++;
@@ -507,6 +498,8 @@ static errorCode encode(
 		}
 	};
 
+	clearString(&chVal);
+	
 	if(tmp_err_code != EXIP_OK)
 	{
 		free(buffer.bufStrm.buf);
