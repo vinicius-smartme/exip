@@ -929,7 +929,7 @@ START_TEST (test_large_doc_str_pattern)
 	parseMultiSchema(schemafname, 1, &schema);
 
 	outfile = fopen(sourceFile, "wb" );
-	fail_if(!outfile, "Unable to open file %s", sourceFile);
+	ck_assert_msg(outfile, "Unable to open file %s", sourceFile);
 
 	// Serialization steps:
 
@@ -1320,7 +1320,6 @@ static size_t readFileInputStream(void* buf, size_t readSize, void* stream)
 static void parseMultiSchema(char** xsdList, int count, EXIPSchema* schema)
 {
 	FILE *schemaFile;
-	BinaryBuffer buffer;
 	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
 	size_t pathlen = strlen(dataDir);
 	const size_t MAX_TOTAL_PATH_LEN = MAX_PATH_LEN*count + strlen(xsdList[0])*count;
@@ -1329,7 +1328,7 @@ static void parseMultiSchema(char** xsdList, int count, EXIPSchema* schema)
 
     memset(exipath, 0, MAX_TOTAL_PATH_LEN);
 
-for (int i = 0; i < count; i++)
+	for (int i = 0; i < count; i++)
 	{
 		memcpy(pathPtr, dataDir, pathlen);
 		pathPtr[pathlen] = '/';

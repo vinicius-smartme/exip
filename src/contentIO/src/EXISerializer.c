@@ -928,7 +928,7 @@ errorCode qnameData(EXIStream* strm, QName qname)
 		return EXIP_INCONSISTENT_PROC_STATE;
 }
 
-errorCode processingInstruction(EXIStream* strm)
+errorCode processingInstruction(EXIStream* strm, const String name, const String text)
 {
 	return EXIP_NOT_IMPLEMENTED_YET;
 }
@@ -1002,7 +1002,7 @@ errorCode namespaceDeclaration(EXIStream* strm, const String ns, const String pr
 	return encodeBoolean(strm, isLocalElementNS);
 }
 
-errorCode docType(EXIStream* strm, String public, const String system, const String text)
+errorCode docType(EXIStream* strm, boolean public, const String system, const String text)
 {
 	return EXIP_NOT_IMPLEMENTED_YET;
 }

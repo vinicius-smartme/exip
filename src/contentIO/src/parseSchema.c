@@ -1,7 +1,7 @@
 #include "parseSchema.h"
 #include "grammarGenerator.h"
 
-errorCode parseSchema(const char *xsdList, const EXIOptions *maskOpt, EXIPSchema *schema)
+errorCode parseSchema(char *xsdList, EXIOptions *maskOpt, EXIPSchema *schema)
 {
     errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
     FILE *schemaFile;

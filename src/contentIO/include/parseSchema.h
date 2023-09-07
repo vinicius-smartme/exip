@@ -14,7 +14,7 @@
  * @param[out] schema the parsed EXIPSchema object
  * @return Error handling code
  */
-errorCode parseSchema(const char *xsdList, const EXIOptions *maskOpt, EXIPSchema *schema);
+errorCode parseSchema(char *xsdList, EXIOptions *maskOpt, EXIPSchema *schema);
 
 
 #endif //PARSE_SCHEMA_H

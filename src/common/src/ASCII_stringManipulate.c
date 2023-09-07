@@ -341,7 +341,7 @@ void printString(const String* inStr)
 	if(inStr->length == 0)
 		return;
 
-	DEBUG_OUTPUT(("%.*s", inStr->length, inStr->str));
+	DEBUG_OUTPUT(("%.*s", (int)inStr->length, inStr->str));
 }
 
 #endif /* EXIP_DEBUG */
@@ -351,5 +351,5 @@ void sPrintString(char * buf, const String* inStr)
 	if(inStr->length == 0)
 		return;
 
-	sprintf(buf, "%.*s", inStr->length, inStr->str);
+	sprintf(buf, "%.*s", (int)inStr->length, inStr->str);
 }

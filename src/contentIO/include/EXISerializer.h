@@ -225,7 +225,7 @@ errorCode qnameData(EXIStream* strm, QName qname);
  * @return Error handling code
  * @todo define the parameters!
  */
-errorCode processingInstruction(EXIStream* strm);
+errorCode processingInstruction(EXIStream* strm, const String name, const String text);
 
 /**
  * @brief Encode a comment
@@ -257,7 +257,7 @@ errorCode namespaceDeclaration(EXIStream* strm, const String ns, const String pr
  * @param text Doctype text content as a String
  * @return errorCode 
  */
-errorCode docType(EXIStream* strm, String public, const String system, const String text);
+errorCode docType(EXIStream* strm, boolean public, const String system, const String text);
 
 /**
  * @brief Encode a entity reference

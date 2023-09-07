@@ -151,9 +151,6 @@ errorCode writeEncodedEXIChunk(EXIStream* strm)
 
 errorCode readFromStream(BinaryBuffer* buffer, Index offset, size_t doSize, Index* doneSize) 
 {
-	size_t newSize = 0;
-	char* tmpPtr = NULL;
-
 	if(buffer->ioStrm.readWriteToStream == NULL)
 	{
 		if(buffer->bufStrm.bufContent == 0) {
@@ -183,7 +180,6 @@ errorCode readFromStream(BinaryBuffer* buffer, Index offset, size_t doSize, Inde
 errorCode writeToStream(BinaryBuffer* buffer, Index offset, size_t doSize, Index* doneSize) 
 {
 	size_t newSize = 0;
-	char* tmpPtr = NULL;
 
 	if(buffer->ioStrm.readWriteToStream == NULL)
 	{
@@ -191,7 +187,7 @@ errorCode writeToStream(BinaryBuffer* buffer, Index offset, size_t doSize, Index
 			// writing outside bounds. Trying to reallocate memory
 			// Rounds up a multiple of 2 for the new size
 			newSize = 2<<(getBitsNumber(doSize + buffer->bufStrm.bufPtr) - 1);
-			int* tmp = (int*)realloc(buffer->bufStrm.buf, newSize);
+			char* tmp = (char*)realloc(buffer->bufStrm.buf, newSize);
 			if(tmp == NULL)
 			{
 				// free(buffer->bufStrm.buf);

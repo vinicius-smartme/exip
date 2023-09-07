@@ -33,9 +33,9 @@ START_TEST (test_createValueTable)
 
 	ck_assert_msg (err == EXIP_OK, "createValueTable returns error code %d", err);
 	ck_assert_msg (valueTable.count == 0,
-				"createValueTable populates the valueTable with count: %d", valueTable.count);
+				"createValueTable populates the valueTable with count: %ld", valueTable.count);
 	ck_assert_msg (valueTable.dynArray.arrayEntries == DEFAULT_VALUE_ENTRIES_NUMBER,
-					"createValueTable creates dynamic array with %d rows", valueTable.dynArray.arrayEntries);
+					"createValueTable creates dynamic array with %ld rows", valueTable.dynArray.arrayEntries);
 	fail_if(valueTable.value == NULL);
 
 	destroyDynArray(&valueTable.dynArray);
@@ -51,7 +51,7 @@ START_TEST (test_createPfxTable)
 
 	ck_assert_msg (err == EXIP_OK, "createPfxTable returns error code %d", err);
 	ck_assert_msg (pfxTable->count == 0,
-				"createPfxTable populates the pfxTable with count: %d", pfxTable->count);
+				"createPfxTable populates the pfxTable with count: %ld", pfxTable->count);
 	fail_if(pfxTable->pfxStr == NULL);
 
 	EXIP_MFREE(pfxTable);
@@ -79,7 +79,7 @@ START_TEST (test_addUriEntry)
 	ck_assert_msg (stringEqual(uriTable.uri[0].uriStr, test_uri) == 1,
 						"addUriEntry changed the uriStr");
 	ck_assert_msg (entryId == 0,
-				"addUriEntry returned wrong entryId: %d", entryId);
+				"addUriEntry returned wrong entryId: %ld", entryId);
 
 	fail_if(uriTable.uri[0].lnTable.ln == NULL);
 
@@ -95,7 +95,7 @@ START_TEST (test_addUriEntry)
 	ck_assert_msg (stringEqual(uriTable.uri[DEFAULT_URI_ENTRIES_NUMBER].uriStr, test_uri) == 1,
 						"addUriEntry changed the uriStr");
 	ck_assert_msg (entryId == DEFAULT_URI_ENTRIES_NUMBER,
-				"addUriEntry returned wrong entryId: %d", entryId);
+				"addUriEntry returned wrong entryId: %ld", entryId);
 
 	fail_if(uriTable.uri[DEFAULT_URI_ENTRIES_NUMBER].lnTable.ln == NULL);
 
@@ -123,7 +123,7 @@ START_TEST (test_addLnEntry)
 	ck_assert_msg (stringEqual(lnTable.ln[0].lnStr, test_ln) == 1,
 						"addLnEntry changed the lnStr");
 	ck_assert_msg (entryId == 0,
-				"addLnEntry returned wrong entryId: %d", entryId);
+				"addLnEntry returned wrong entryId: %ld", entryId);
 
 #if VALUE_CROSSTABLE_USE
 	fail_if(lnTable.ln[0].vxTable != NULL);
@@ -141,7 +141,7 @@ START_TEST (test_addLnEntry)
 	ck_assert_msg (stringEqual(lnTable.ln[DEFAULT_LN_ENTRIES_NUMBER].lnStr, test_ln) == 1,
 						"addLnEntry changed the lnStr");
 	ck_assert_msg (entryId == DEFAULT_LN_ENTRIES_NUMBER,
-				"addLnEntry returned wrong entryId: %d", entryId);
+				"addLnEntry returned wrong entryId: %ld", entryId);
 #if VALUE_CROSSTABLE_USE
 	fail_if(lnTable.ln[DEFAULT_LN_ENTRIES_NUMBER].vxTable != NULL);
 #endif

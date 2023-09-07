@@ -22,7 +22,7 @@
 #define IN_XML 1
 
 errorCode encodeFromFile(
-    const char *schemaPath, 
+    char *schemaPath, 
 	unsigned char outFlag, 
 	boolean hasOptions, 
 	EXIOptions *options,
@@ -31,7 +31,7 @@ errorCode encodeFromFile(
 	size_t *outDataLen);
 
 errorCode encodeFromBuffer(
-    const char *schemaPath,
+    char *schemaPath,
 	unsigned char outFlag, 
 	boolean hasOptions, 
 	EXIOptions *options,

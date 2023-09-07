@@ -22,7 +22,7 @@
 #define OUT_XML 1
 
 errorCode decodeFromFile(
-	const char *schemaPath, 
+	char *schemaPath, 
 	unsigned char outFlag, 
 	boolean hasOptions, 
 	EXIOptions *options,
@@ -30,7 +30,7 @@ errorCode decodeFromFile(
 	List *outData);
 
 errorCode decodeFromBuffer(
-	const char *schemaPath, 
+	char *schemaPath, 
 	unsigned char outFlag, 
 	boolean hasOptions, 
 	EXIOptions *options,

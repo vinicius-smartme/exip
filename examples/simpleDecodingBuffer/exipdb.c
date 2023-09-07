@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
     } else if (inFileSize == IN_DATA_SIZE) {
 		printf("Warning: Maybe file size is bigger than the buffer !!\n");
 	}
-	printf("Read %d(Buffer size: %d)\n", inFileSize, IN_DATA_SIZE);
+	printf("Read %ld(Buffer size: %d)\n", inFileSize, IN_DATA_SIZE);
 
 	tmp_err_code = decode(schemaPtr, outFlag, NULL, buf, inFileSize, outOfBandOpts, opsPtr, NULL);
 

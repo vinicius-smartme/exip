@@ -335,7 +335,7 @@ START_TEST (test_decodeUnsignedInteger)
   err = decodeUnsignedInteger(&testStream, &bit_val);
 
   ck_assert_msg (bit_val == 12372,
-	       "The UnsignedInteger 12372 from the stream is read as %d", bit_val);
+	       "The UnsignedInteger 12372 from the stream is read as %ld", bit_val);
   ck_assert_msg (err == EXIP_OK,
 	       "decodeUnsignedInteger returns error code %d", err);
   ck_assert_msg (testStream.context.bitPointer == 0,
@@ -376,7 +376,7 @@ START_TEST (test_decodeString)
   err = decodeString(&testStream, &bit_val);
 
   ck_assert_msg (bit_val.length == 2,
-	       "The String length of 2 is reported as %d from decodeString", bit_val.length);
+	       "The String length of 2 is reported as %ld from decodeString", bit_val.length);
   ck_assert_msg (bit_val.str[0] == 'e' && bit_val.str[1] == 'T',
   	       "The String \"eT\" is decoded wrong by decodeString");
   ck_assert_msg (err == EXIP_OK,
@@ -445,7 +445,7 @@ START_TEST (test_decodeBinary)
   ck_assert_msg (err == EXIP_OK,
 	       "decodeBinary returns error code %d", err);
   ck_assert_msg (bytes == 5,
-	       "The length of the binary content is read as %d (actual : %d)", bytes,5);
+	       "The length of the binary content is read as %ld (actual : %d)", bytes,5);
   ck_assert_msg (same == 1,
 	       "The binary content is read wrongly");
   ck_assert_msg (testStream.context.bitPointer == 0,
@@ -472,7 +472,7 @@ START_TEST (test_decodeBinary)
   ck_assert_msg (err == EXIP_OK,
 	       "decodeBinary returns error code %d", err);
   ck_assert_msg (bytes == 8,
-	       "The length of the binary content is read as %d (actual : %d)", bytes,8);
+	       "The length of the binary content is read as %ld (actual : %d)", bytes,8);
   ck_assert_msg (same == 1,
 	       "The binary content is read wrongly");
   ck_assert_msg (testStream.context.bitPointer == 0,
@@ -562,7 +562,7 @@ START_TEST (test_decodeIntegerValue)
   err = decodeIntegerValue(&testStream, &bit_val);
 
   ck_assert_msg (bit_val == -41,
-	       "The IntegerValue -41 from the stream is read as %d", bit_val);
+	       "The IntegerValue -41 from the stream is read as %ld", bit_val);
   ck_assert_msg (err == EXIP_OK,
 	       "decodeIntegerValue returns error code %d", err);
   ck_assert_msg (testStream.context.bitPointer == 1,
@@ -577,7 +577,7 @@ START_TEST (test_decodeIntegerValue)
   err = decodeIntegerValue(&testStream, &bit_val);
 
   ck_assert_msg (bit_val == 40,
-	       "The IntegerValue 40 from the stream is read as %d", bit_val);
+	       "The IntegerValue 40 from the stream is read as %ld", bit_val);
   ck_assert_msg (err == EXIP_OK,
 	       "decodeIntegerValue returns error code %d", err);
   ck_assert_msg (testStream.context.bitPointer == 1,
@@ -619,7 +619,7 @@ START_TEST (test_decodeDecimalValue)
 
 	err = decodeDecimalValue(&testStream, &dec_val);
 
-	ck_assert_msg (res.mantissa == dec_val.mantissa && res.exponent == dec_val.exponent, "The value 5.001 is decoded as %d*10^%d", dec_val.mantissa, dec_val.exponent);
+	ck_assert_msg (res.mantissa == dec_val.mantissa && res.exponent == dec_val.exponent, "The value 5.001 is decoded as %ld*10^%d", dec_val.mantissa, dec_val.exponent);
 	ck_assert_msg (err == EXIP_OK,
 		   "decodeDecimalValue returns error code %d", err);
 	ck_assert_msg (testStream.context.bitPointer == 1,
@@ -987,7 +987,7 @@ START_TEST (test_encodeDecimalValue)
 
 	err = decodeDecimalValue(&testStream, &dec_val);
 
-	ck_assert_msg (res.mantissa == dec_val.mantissa && res.exponent == dec_val.exponent, "The value 5.001 is decoded as %d*10^%d", dec_val.mantissa, dec_val.exponent);
+	ck_assert_msg (res.mantissa == dec_val.mantissa && res.exponent == dec_val.exponent, "The value 5.001 is decoded as %ld*10^%d", dec_val.mantissa, dec_val.exponent);
 
 }
 END_TEST

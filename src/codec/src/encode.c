@@ -17,6 +17,8 @@
 #include "parseSchema.h"
 #include <stdio.h>
 #include <string.h>
+#include "../../grammarGen/include/grammarGenerator.h"
+#include "headerEncode.h"
 
 #define OUTPUT_BUFFER_SIZE 200
 #define MAX_ATTRIBUTE_LENGTH 64
@@ -44,12 +46,12 @@ const String ATTR_VERSION_STR = {"version", 7};
 const String ATTR_GOAL_STR = {"goal", 4};
 const String ATTR_ID_STR = {"id", 2};
 
-static char SOME_BINARY_DATA[] = {0x02, 0x6d, 0x2f, 0xa5, 0x20, 0xf2, 0x61, 0x9c, 0xee, 0x0f};
-static String SOME_BINARY_DATA_BASE64 = {"i3sd7fatzxad", 12};
+// static char SOME_BINARY_DATA[] = {0x02, 0x6d, 0x2f, 0xa5, 0x20, 0xf2, 0x61, 0x9c, 0xee, 0x0f};
+// static String SOME_BINARY_DATA_BASE64 = {"i3sd7fatzxad", 12};
 // static String ENUM_DATA_1 = {"hello", 5};
 // static String ENUM_DATA_2 = {"hi", 2};
 // static String ENUM_DATA_3 = {"hey", 3};
-static String ENUM_DATA_4 = {"hej", 3};
+// static String ENUM_DATA_4 = {"hej", 3};
 
 #define TRY_CATCH_ENCODE(func) TRY_CATCH(func, serialize.closeEXIStream(&testStrm))
 
@@ -161,7 +163,6 @@ errorCode read_startElement(unsigned char inFlag, const char *data, String *uri,
 errorCode read_endElement(unsigned char inFlag, const char *data)
 {
 	char *strPtr = NULL;
-	Node *entry = NULL;
 
 	if (inFlag == IN_EXI)
 	{
@@ -312,7 +313,6 @@ errorCode read_attribute(unsigned char inFlag, const char *data, String *uri, St
 
 errorCode read_stringData(unsigned char inFlag, const char *data, String *chVal) {
 	char* strPtr = NULL;
-	char* localNamePtr = NULL;
 	size_t strLen = 0;
 	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
 
@@ -510,7 +510,7 @@ static errorCode encode(
 }
 
 errorCode encodeFromFile(
-    const char *schemaPath, 
+    char *schemaPath, 
 	unsigned char outFlag, 
 	boolean hasOptions, 
 	EXIOptions *options,
@@ -540,7 +540,7 @@ errorCode encodeFromFile(
 }
 
 errorCode encodeFromBuffer(
-    const char *schemaPath,
+    char *schemaPath,
 	unsigned char outFlag, 
 	boolean hasOptions, 
 	EXIOptions *options,
