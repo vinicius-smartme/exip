@@ -21,6 +21,7 @@
 #include "stringManipulate.h"
 #include "memManagement.h"
 #include "dynamicArray.h"
+#include "grammars.h"
 
 /* BEGIN: table tests */
 

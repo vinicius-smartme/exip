@@ -486,7 +486,6 @@ static errorCode sample_qnameData(const QName qname, void* app_data)
 static void parseSingleSchema(const char* fileName, EXIPSchema* schema)
 {
 	FILE *schemaFile;
-	BinaryBuffer buffer;
 	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
 	size_t pathlen = strlen(dataDir);
 	char exipath[MAX_PATH_LEN + strlen(fileName)];

@@ -49,7 +49,6 @@ size_t readFileInputStream(void* buf, size_t readSize, void* stream)
 static void parseSingleSchema(const char* fileName, EXIPSchema* schema)
 {
 	FILE *schemaFile;
-	BinaryBuffer buffer;
 	errorCode tmp_err_code = EXIP_UNEXPECTED_ERROR;
 	size_t pathlen = strlen(dataDir);
 	char exipath[MAX_PATH_LEN + strlen(fileName)];
