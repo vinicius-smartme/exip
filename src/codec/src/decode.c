@@ -162,8 +162,6 @@ static errorCode decode(
 	outData->head = parsingData.outData.head;
 	outData->tail = parsingData.outData.tail;
 
-	printf("Output size: %d (%p)\n", outData->size, (void *)outData);
-
 	if (tmp_err_code == EXIP_PARSING_COMPLETE)
 		return EXIP_OK;
 	else
@@ -325,11 +323,11 @@ static errorCode sample_startDocument(void *app_data)
 	char msg[40];
 	struct appData *appD = (struct appData *)app_data;
 	if (appD->outputFormat == OUT_EXI)
-		sprintf(msg, "SD\n");
+		sprintf(msg, "SD");
 	else if (appD->outputFormat == OUT_XML)
-		sprintf(msg, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+		sprintf(msg, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
 
-	printf("%s", msg);
+	printf("%s\n", msg);
 	pushBack(&appD->outData, msg, strlen(msg));
 	return EXIP_OK;
 }
@@ -339,11 +337,11 @@ static errorCode sample_endDocument(void *app_data)
 	char msg[4];
 	struct appData *appD = (struct appData *)app_data;
 	if (appD->outputFormat == OUT_EXI)
-		sprintf(msg, "ED\n");
+		sprintf(msg, "ED");
 	else if (appD->outputFormat == OUT_XML)
-		sprintf(msg, "\n");
+		sprintf(msg, " ");
 
-	printf("%s", msg);
+	printf("%s\n", msg);
 	pushBack(&appD->outData, msg, strlen(msg));
 	return EXIP_OK;
 }
@@ -370,7 +368,6 @@ static errorCode sample_startElement(QName qname, void *app_data)
 		sPrintString(msg + msgIdx, qname.localName);
 		msgIdx = strlen(msg);
 		printf("\n");
-		sprintf(msg + msgIdx, "\n");
 	}
 	else if (appD->outputFormat == OUT_XML)
 	{
@@ -439,8 +436,8 @@ static errorCode sample_endElement(void *app_data)
 
 	if (appD->outputFormat == OUT_EXI)
 	{
-		sprintf(msg, "EE\n");
-		printf("%s", msg);
+		sprintf(msg, "EE");
+		printf("%s\n", msg);
 	}
 	else if (appD->outputFormat == OUT_XML)
 	{
@@ -451,7 +448,7 @@ static errorCode sample_endElement(void *app_data)
 			printf(">\n");
 			// sprintf(msg, ">\n");
 			// msgIdx++;
-			tmp_err_code = updateListLastAttribute(1, &(appD->outData), ">\n");
+			tmp_err_code = updateListLastAttribute(1, &(appD->outData), ">");
 			if (tmp_err_code != EXIP_OK) {
 				fprintf(stderr, "Unable to update list at sample_endElement - error code: %d", tmp_err_code);
 				return tmp_err_code;
@@ -460,7 +457,7 @@ static errorCode sample_endElement(void *app_data)
 		appD->unclosedElement = 0;
 		el = pop(&(appD->stack));
 		printf("</%s>\n", el->name);
-		sprintf(msg + msgIdx, "</%s>\n", el->name);
+		sprintf(msg + msgIdx, "</%s>", el->name);
 		destroyElement(el);
 	}
 
@@ -481,9 +478,12 @@ static errorCode sample_attribute(QName qname, void *app_data)
 		printString(qname.uri);
 		sPrintString(msg + msgIdx, qname.uri);
 		msgIdx = strlen(msg);
-		printf(" ");
-		sprintf(msg + msgIdx, " ");
-		msgIdx++;
+		if (qname.uri->length > 0)
+		{
+			printf(" ");
+			sprintf(msg + msgIdx, " ");
+			msgIdx++;	
+		}
 		printString(qname.localName);
 		sPrintString(msg + msgIdx, qname.localName);
 		msgIdx = strlen(msg);
@@ -500,9 +500,12 @@ static errorCode sample_attribute(QName qname, void *app_data)
 			printString(qname.uri);
 			sPrintString(msg + msgIdx, qname.uri);
 			msgIdx = strlen(msg);
-			printf(":");
-			sprintf(msg + msgIdx, ":");
-			msgIdx++;
+			if (qname.uri->length > 0)
+			{
+				printf(":");
+				sprintf(msg + msgIdx, ":");
+				msgIdx++;	
+			}
 		}
 		printString(qname.localName);
 		sPrintString(msg + msgIdx, qname.localName);
@@ -532,8 +535,8 @@ static errorCode sample_stringData(const String value, void *app_data)
 			sPrintString(msg + msgIdx, &value);
 			msgIdx = strlen(msg);
 			printf("\"\n");
-			sprintf(msg + msgIdx, "\"\n");
-			msgIdx += 2;
+			sprintf(msg + msgIdx, "\"");
+			msgIdx += 1;
 			appD->expectAttributeData = 0;
 		}
 		else
@@ -545,8 +548,6 @@ static errorCode sample_stringData(const String value, void *app_data)
 			sPrintString(msg + msgIdx, &value);
 			msgIdx = strlen(msg);
 			printf("\n");
-			sprintf(msg + msgIdx, "\n");
-			msgIdx++;
 		}
 	}
 	else if (appD->outputFormat == OUT_XML)
@@ -577,7 +578,6 @@ static errorCode sample_stringData(const String value, void *app_data)
 			printString(&value);
 			sPrintString(msg + msgIdx, &value);
 			msgIdx = strlen(msg);
-			// sprintf(msg + msgIdx, "\0");
 		}
 	}
 
@@ -611,7 +611,7 @@ static errorCode sample_intData(Integer int_val, void *app_data)
 			sprintf(tmp_buf, "%lld", (long long int)int_val);
 			printf("%s", tmp_buf);
 			printf("\"\n");
-			sprintf(msg + msgIdx, "%s\"\n", tmp_buf);
+			sprintf(msg + msgIdx, "%s\"", tmp_buf);
 			msgIdx = strlen(msg);
 			appD->expectAttributeData = 0;
 		}
@@ -621,7 +621,7 @@ static errorCode sample_intData(Integer int_val, void *app_data)
 			sprintf(tmp_buf, "%lld", (long long int)int_val);
 			printf("%s", tmp_buf);
 			printf("\n");
-			sprintf(msg + msgIdx, "CH %s\"\n", tmp_buf);
+			sprintf(msg + msgIdx, "CH %s\"", tmp_buf);
 			msgIdx = strlen(msg);
 		}
 	}
@@ -680,14 +680,14 @@ static errorCode sample_booleanData(boolean bool_val, void *app_data)
 			if (bool_val)
 			{
 				printf("true\"\n");
-				sprintf(msg + msgIdx, "true\"\n");
-				msgIdx += 7;
+				sprintf(msg + msgIdx, "true\"");
+				msgIdx += 6;
 			}
 			else
 			{
 				printf("false\"\n");
-				sprintf(msg + msgIdx, "false\"\n");
-				msgIdx += 8;
+				sprintf(msg + msgIdx, "false\"");
+				msgIdx += 7;
 			}
 
 			appD->expectAttributeData = 0;
@@ -698,13 +698,15 @@ static errorCode sample_booleanData(boolean bool_val, void *app_data)
 			if (bool_val)
 			{
 				printf("true\n");
-				sprintf(msg + msgIdx, "CH true\"\n");
-				msgIdx += 10;
+				sprintf(msg + msgIdx, "CH true");
+				msgIdx += 9;
 			}
 			else
+			{
 				printf("false\n");
-			sprintf(msg + msgIdx, "CH false\"\n");
-			msgIdx += 11;
+				sprintf(msg + msgIdx, "CH false");
+				msgIdx += 10;
+			}
 		}
 	}
 	else if (appD->outputFormat == OUT_XML)
@@ -779,7 +781,7 @@ static errorCode sample_floatData(Float fl_val, void *app_data)
 			sprintf(tmp_buf, "%lldE%d", (long long int)fl_val.mantissa, fl_val.exponent);
 			printf("%s", tmp_buf);
 			printf("\"\n");
-			sprintf(msg + msgIdx, "%s\"\n", tmp_buf);
+			sprintf(msg + msgIdx, "%s\"", tmp_buf);
 			msgIdx = strlen(msg);
 			appD->expectAttributeData = 0;
 		}
@@ -789,7 +791,7 @@ static errorCode sample_floatData(Float fl_val, void *app_data)
 			sprintf(tmp_buf, "%lldE%d", (long long int)fl_val.mantissa, fl_val.exponent);
 			printf("%s", tmp_buf);
 			printf("\n");
-			sprintf(msg + msgIdx, "CH %s\n", tmp_buf);
+			sprintf(msg + msgIdx, "CH %s", tmp_buf);
 			msgIdx = strlen(msg);
 		}
 	}
@@ -891,7 +893,7 @@ static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data)
 				   dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
 				   dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
 			printf("\"\n");
-			sprintf(msg + msgIdx, "%04d-%02d-%02dT%02d:%02d:%02d%s%s\"\n",
+			sprintf(msg + msgIdx, "%04d-%02d-%02dT%02d:%02d:%02d%s%s\"",
 					dt_val.dateTime.tm_year + 1900,
 					dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
 					dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
@@ -907,7 +909,7 @@ static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data)
 				   dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
 				   dt_val.dateTime.tm_sec, fsecBuf, tzBuf);
 			printf("\n");
-			sprintf(msg + msgIdx, "CH %04d-%02d-%02dT%02d:%02d:%02d%s%s\n",
+			sprintf(msg + msgIdx, "CH %04d-%02d-%02dT%02d:%02d:%02d%s%s",
 					dt_val.dateTime.tm_year + 1900,
 					dt_val.dateTime.tm_mon + 1, dt_val.dateTime.tm_mday,
 					dt_val.dateTime.tm_hour, dt_val.dateTime.tm_min,
@@ -969,7 +971,7 @@ static errorCode sample_dateTimeData(EXIPDateTime dt_val, void *app_data)
 
 static errorCode sample_binaryData(const char *binary_val, Index nbytes, void *app_data)
 {
-	char msg[30];
+	char msg[64];
 	size_t msgIdx = 0;
 	struct appData *appD = (struct appData *)app_data;
 	unsigned char isAttribute = appD->expectAttributeData;
@@ -979,18 +981,22 @@ static errorCode sample_binaryData(const char *binary_val, Index nbytes, void *a
 	{
 		if (appD->expectAttributeData)
 		{
-			printf("[binary: %d bytes]", (int)nbytes);
+			for (size_t i = 0; i < nbytes; i++)
+			{
+				printf("%02X", (char)*binary_val);
+				sprintf(msg + msgIdx, "%02X", (char)*binary_val);
+				msgIdx = strlen(msg);
+			}
+			printf(" [%d bytes]", (int)nbytes);
 			printf("\"\n");
-			sprintf(msg + msgIdx, "[binary: %d bytes]\"\n", (int)nbytes);
-			msgIdx = strlen(msg);
 			appD->expectAttributeData = 0;
 		}
 		else
 		{
 			printf("CH ");
-			printf("[binary: %d bytes]", (int)nbytes);
+			printf("%02X [%d bytes]", (char)*binary_val, (int)nbytes);
 			printf("\n");
-			sprintf(msg + msgIdx, "CH [binary: %d bytes]\n", (int)nbytes);
+			sprintf(msg + msgIdx, "%02X", (char)*binary_val);
 			msgIdx = strlen(msg);
 		}
 	}
@@ -998,9 +1004,9 @@ static errorCode sample_binaryData(const char *binary_val, Index nbytes, void *a
 	{
 		if (appD->expectAttributeData)
 		{
-			printf("[binary: %d bytes]", (int)nbytes);
+			printf("%02X [%d bytes]", (char)*binary_val, (int)nbytes);
 			printf("\"");
-			sprintf(msg + msgIdx, "[binary: %d bytes]\"", (int)nbytes);
+			sprintf(msg + msgIdx, "%02X", (char)*binary_val);
 			msgIdx = strlen(msg);
 			appD->expectAttributeData = 0;
 		}
@@ -1018,8 +1024,8 @@ static errorCode sample_binaryData(const char *binary_val, Index nbytes, void *a
 				}
 			}
 			appD->unclosedElement = 0;
-			printf("[binary: %d bytes]", (int)nbytes);
-			sprintf(msg + msgIdx, "[binary: %d bytes]", (int)nbytes);
+			printf("%02X [%d bytes]", (char)*binary_val, (int)nbytes);
+			sprintf(msg + msgIdx, "%02X\"", (char)*binary_val);
 			msgIdx = strlen(msg);
 		}
 	}
@@ -1054,7 +1060,7 @@ static errorCode sample_qnameData(const QName qname, void *app_data)
 			sPrintString(msg + msgIdx, qname.localName);
 			msgIdx = strlen(msg);
 			printf("\"\n");
-			sprintf(msg + msgIdx, "\"\n");
+			sprintf(msg + msgIdx, "\"");
 			appD->expectAttributeData = 0;
 		}
 		else
@@ -1072,7 +1078,6 @@ static errorCode sample_qnameData(const QName qname, void *app_data)
 			sPrintString(msg + msgIdx, qname.localName);
 			msgIdx = strlen(msg);
 			printf("\n");
-			sprintf(msg + msgIdx, "\n");
 		}
 	}
 	else if (appD->outputFormat == OUT_XML)
