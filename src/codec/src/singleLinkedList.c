@@ -12,6 +12,7 @@
 
 #include "singleLinkedList.h"
 #include "grammarGenerator.h"
+#include "stringManipulate.h"
 
 List newList()
 {
@@ -205,4 +206,84 @@ List *copyList(List *list)
         current = current->next;
     }
     return new_list;
+}
+
+bool cmpCharList(List *list1, List *list2)
+{
+    Node *node1;
+    Node *node2;
+    if (!list1 || !list2)
+    {
+        return false;
+    }
+    node1 = list1->head;
+    node2 = list2->head;
+    
+    while ((node1 != list1->tail) || (node2 != list2->tail))
+    {
+        if ((node1->size != node2->size) || (*((char*)node1->data) != *((char*)node2->data)))
+        {
+            return false;
+        }
+        node1 = node1->next;
+        node2 = node2->next;
+    }
+    return true;
+}
+
+bool cmpStrList(List *list1, List *list2)
+{
+    Node *node1;
+    Node *node2;
+    if (!list1 || !list2)
+    {
+        return false;
+    }
+    node1 = list1->head;
+    node2 = list2->head;
+    while ((node1 != list1->tail) || (node2 != list2->tail))
+    {
+        if ((node1->size != node2->size) || (strcmp((char*)node1->data, (char*)node2->data)))
+        {
+            return false;
+        }
+        node1 = node1->next;
+        node2 = node2->next;
+    }
+    return true;
+}
+
+bool cmpStringList(List *list1, List *list2)
+{
+    Node *node1;
+    Node *node2;
+    String *data1;
+    String *data2;
+    if (!list1 || !list2)
+    {
+        return false;
+    }
+    if (list1->size != list2->size)
+    {
+        return false;
+    }
+    node1 = list1->head;
+    node2 = list2->head;
+    
+    while ((node1 != list1->tail) || (node2 != list2->tail))
+    {
+        if (node1->size != node2->size)
+        {
+            return false;
+        }
+        data1 = (String*)node1->data;
+        data2 = (String*)node2->data;
+        if (!stringCompare(*data1, *data2))
+        {
+            return false;
+        }
+        node1 = node1->next;
+        node2 = node2->next;
+    }
+    return true;
 }

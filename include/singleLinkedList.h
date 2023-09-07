@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 typedef struct Node
 {
@@ -41,5 +42,8 @@ void printList(List *list);
 void clearNode(Node *node);
 void deleteList(List *list);
 List *copyList(List *list);
+bool cmpCharList(List *list1, List *list2);
+bool cmpStrList(List *list1, List *list2);
+bool cmpStringList(List *list1, List *list2);
 
 #endif /* SINGLE_LINKED_LIST_H_ */
